@@ -1,0 +1,21 @@
+{:+ {:app [(:lt.objs.plugins/load-js ["codemirror/javascript.js" "javascript_compiled.js"])]
+     :editor.javascript [:lt.plugins.js/js-success :lt.plugins.js/js-result
+                         :lt.plugins.js/js-exception :lt.plugins.js/on-eval
+                         :lt.plugins.js/on-eval.one
+                         :lt.plugins.js/watch-src
+                         :lt.plugins.js/js-watch
+                         (:lt.object/add-tag :watchable)]
+     :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
+                                         {:name "JSON" :exts [:json] :mime "application/json" :tags [:editor.javascript :editor.json]}])]
+     :nodejs.client [:lt.plugins.js.node/init-debugger!
+                     :lt.plugins.js.node/start-debugger!
+                     :lt.plugins.js.node/connect-success
+                     :lt.plugins.js.node/send!
+                     :lt.plugins.js.node/debugger-evaluate
+                     :lt.plugins.js.node/debugger-changelive
+                     :lt.plugins.js.node/refresh-scripts!
+                     :lt.plugins.js.node/debugger-scripts
+                     :lt.plugins.js.node/changelive!
+                     :lt.plugins.js.node/connect-retry]
+     :nodejs.lang [:lt.plugins.js.node/connect!]
+     }}
