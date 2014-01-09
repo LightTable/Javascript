@@ -276,7 +276,7 @@
 (def nodejs-lang (object/create ::nodejs-lang))
 
 (scl/add-connector {:name "NodeJS"
-                    :desc "Start a nodejs procss by picking a .js file to run"
+                    :desc "Start a nodejs process by picking a .js file to run"
                     :connect (fn []
                                (dialogs/file nodejs-lang :connect!))})
 
