@@ -1,2 +1,8 @@
 // This is a comment
-Fun
+
+function blergs(a, b) {
+  console.log(b);
+  return +a;
+}
+
+bl

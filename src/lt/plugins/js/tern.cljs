@@ -53,13 +53,20 @@
 (def test-file (files/join (:path (user-plugin-info "Javascript" ))
                                               "tern-testing.js" ))
 
+(def other-file (files/join (:path (user-plugin-info "Javascript" ))
+                                              "blah.js" ))
+
 (def compl (atom nil))
+
+(.addFile server other-file)
 
 (.request server (clj->js {:query {:type "completions"
                                    :file test-file
-                                   :end {:ch 3
-                                         :line 1}
-                                   :lineCharPositions true}
+                                   :end {:ch 2
+                                         :line 7}
+                                   :lineCharPositions true
+                                   :docs true
+                                   :types true}
                            :file [{:name test-file
                                    :text (files/bomless-read test-file)}]})
           (fn [e data]
