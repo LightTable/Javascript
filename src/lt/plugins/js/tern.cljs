@@ -1,4 +1,4 @@
-(ns lt.plugins.js
+(ns lt.plugins.js.tern
   (:require [lt.object :as object]
             [lt.objs.plugins :as plugins]
             [lt.objs.eval :as eval]
@@ -19,6 +19,13 @@
   (:require-macros [lt.macros :refer [behavior defui]]))
 
 
+(behavior ::js-hints
+          :triggers #{:hints+}
+          :reaction (fn [editor hints token]
+                      (do
+                        (identity token)
+                        (concat hints [#js {:completion "blergs123"}]))))
+
 (defn user-plugin-info [name]
   (let [d plugins/user-plugins-dir
         path (files/join d name)
@@ -38,6 +45,11 @@
     (-> (files/join (:node-modules-dir info) "tern" "defs" name)
         (files/bomless-read)
         (js/JSON.parse))))
+
+
+
+
+
 
 ;; Playground
 

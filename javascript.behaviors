@@ -4,7 +4,8 @@
                          :lt.plugins.js/on-eval.one
                          :lt.plugins.js/watch-src
                          :lt.plugins.js/js-watch
-                         (:lt.object/add-tag :watchable)]
+                         (:lt.object/add-tag :watchable)
+                         :lt.plugins.js.tern/js-hints]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
                                          {:name "JSON" :exts [:json] :mime "application/json" :tags [:editor.javascript :editor.json]}])]
      :nodejs.client [:lt.plugins.js.node/init-debugger!
