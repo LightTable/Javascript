@@ -8,6 +8,7 @@
             [lt.objs.clients :as clients]
             [lt.objs.sidebar.clients :as scl]
             [lt.objs.browser :as browser]
+            [lt.objs.editor.pool :as pool]
             [lt.objs.notifos :as notifos]
             [lt.objs.sidebar.command :as cmd]
             [lt.objs.popup :as popup]
@@ -38,6 +39,34 @@
   (let [TernServer (.-Server (js/require tern-module-dir))]
     (TernServer. (clj->js opts))))
 
+(defn add-files [ts paths]
+  (let [server (::instance @ts)]
+    (doseq [p paths]
+      (.addFile server p (files/bomless-read p)))))
+
+(defn all-js-files [ws]
+  (let [reg #"\.js$"
+        func #(re-find reg %)
+        ds (:folders @ws)
+        fs (filter func (:files @ws))]
+    (concat fs (mapcat #(files/filter-walk func %) ds))))
+
+(comment
+  ;; Position
+  (-> (pool/last-active)
+      (ed/->cursor))
+
+  ;; Text value
+  (-> (pool/last-active)
+      (ed/->val))
+
+  ;; Path
+  (-> (pool/last-active)
+      deref
+      :info
+      :path))
+
+
 (behavior ::start-server
           :triggers #{:object.instant}
           :order -7
@@ -46,11 +75,25 @@
                                                             (files/bomless-read path))
                                                  :async false
                                                  :def [(tern-def "browser.json")
-                                                       (tern-def "ecma5.json")]})])
-                      (object/merge! this {::instance server})))
+                                                       (tern-def "ecma5.json")]})]
+                        (object/merge! this {::instance server}))
+                      (object/raise this :import-current-workspace)))
+
+(behavior ::import-current-workspace
+          :triggers #{:import-current-workspace}
+          :reaction (fn [this]
+                      (let [paths (all-js-files lt.objs.workspace/current-ws)]
+                        (object/raise this :add-files paths))))
+
+(behavior ::add-files
+          :triggers #{:add-files}
+          :reaction (fn [this paths]
+                      (add-files this paths)))
 
 (object/object* ::tern-server
                 :tags #{:tern-server}
+                :behaviors [::import-current-workspace
+                            ::add-files]
                 :init (fn [this] nil))
 
 (def ts (object/create ::tern-server))
