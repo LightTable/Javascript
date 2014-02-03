@@ -18,71 +18,92 @@
             [lt.util.cljs :refer [js->clj]])
   (:require-macros [lt.macros :refer [behavior defui]]))
 
-
-(behavior ::js-hints
-          :triggers #{:hints+}
-          :reaction (fn [editor hints token]
-                      (do
-                        (identity token)
-                        (concat hints [#js {:completion "blergs123"}]))))
-
-(defn user-plugin-info [name]
-  (let [d plugins/user-plugins-dir
-        path (files/join d name)
-        nm (files/join path "node_modules")]
-    {:name name
-     :path path
-     :node-modules-dir nm}))
-
-(defn user-module [name mod]
-  (-> (user-plugin-info name)
-      :node-modules-dir
-      (files/join mod)
-      (js/require)))
+(def tern-module-dir
+  (let [a (files/join plugins/user-plugins-dir "Javascript"  "node_modules" "tern")
+        b (files/join plugins/plugins-dir "Javascript" "node_modules" "tern")
+        c (files/join plugins/plugins-dir "javascript" "node_modules" "tern")
+        e (files/join plugins/*plugin-dir* "node_modules" "tern")]
+    (cond
+     (files/dir? a) a
+     (files/dir? b) b
+     (files/dir? c) c
+     :else e)))
 
 (defn tern-def [name]
-  (let [info (user-plugin-info "Javascript")]
-    (-> (files/join (:node-modules-dir info) "tern" "defs" name)
-        (files/bomless-read)
-        (js/JSON.parse))))
+  (-> (files/join tern-module-dir "defs" name)
+      (files/bomless-read)
+      (js/JSON.parse)))
 
+(defn tern-server [opts]
+  (let [TernServer (.-Server (js/require tern-module-dir))]
+    (TernServer. (clj->js opts))))
 
+(behavior ::start-server
+          :triggers #{:object.instant}
+          :order -7
+          :reaction (fn [this]
+                      (let [server (tern-server {:getFile (fn [path]
+                                                            (files/bomless-read path))
+                                                 :async false
+                                                 :def [(tern-def "browser.json")
+                                                       (tern-def "ecma5.json")]})])
+                      (object/merge! this {::instance server})))
 
+(object/object* ::tern-server
+                :tags #{:tern-server}
+                :init (fn [this] nil))
 
+(def ts (object/create ::tern-server))
 
 
 ;; Playground
+(comment
+  (behavior ::js-hints
+            :triggers #{:hints+}
+            :reaction (fn [editor hints token]
+                        (do
+                          (identity token)
+                          (concat hints [#js {:completion "blergs123"}]))))
 
-(def tern (user-module "Javascript" "tern" ))
+  (def fs (js/require "fs"))
 
-(def server (tern.Server. #js {:getFile (fn [path]
-                                          (files/bomless-read path))
-                               :async false
-                               :defs #js [(tern-def "browser.json")
-                                          (tern-def "ecma5.json")]
-                               :plugins #js {}}))
+  (def js-re #"\.js$")
 
-(def test-file (files/join (:path (user-plugin-info "Javascript" ))
-                                              "tern-testing.js" ))
+  (->> @lt.objs.workspace/current-ws
+       :folders
+       (mapcat #(files/filter-walk (fn [x]
+                                     (re-find js-re x)) %)))
 
-(def other-file (files/join (:path (user-plugin-info "Javascript" ))
-                                              "blah.js" ))
+  (def tern (user-module "Javascript" "tern" ))
 
-(def compl (atom nil))
+  (def server (tern.Server. #js {:getFile (fn [path]
+                                            (files/bomless-read path))
+                                 :async false
+                                 :defs #js [(tern-def "browser.json")
+                                            (tern-def "ecma5.json")]
+                                 :plugins #js {}}))
 
-(.addFile server other-file)
+  (def test-file (files/join (:path (user-plugin-info "Javascript" ))
+                             "tern-testing.js" ))
 
-(.request server (clj->js {:query {:type "completions"
-                                   :file test-file
-                                   :end {:ch 2
-                                         :line 7}
-                                   :lineCharPositions true
-                                   :docs true
-                                   :types true}
-                           :file [{:name test-file
-                                   :text (files/bomless-read test-file)}]})
-          (fn [e data]
-            (swap! compl (fn [_ d] d) data)))
+  (def other-file (files/join (:path (user-plugin-info "Javascript" ))
+                              "blah.js" ))
 
-@compl
+  (def compl (atom nil))
+
+  (.addFile server other-file)
+
+  (.request server (clj->js {:query {:type "completions"
+                                     :file test-file
+                                     :end {:ch 2
+                                           :line 7}
+                                     :lineCharPositions true
+                                     :docs true
+                                     :types true}
+                             :file [{:name test-file
+                                     :text (files/bomless-read test-file)}]})
+            (fn [e data]
+              (swap! compl (fn [_ d] d) data)))
+
+  @compl)
 
