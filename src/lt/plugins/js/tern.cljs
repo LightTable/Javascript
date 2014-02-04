@@ -3,6 +3,7 @@
             [lt.objs.plugins :as plugins]
             [lt.objs.eval :as eval]
             [lt.objs.editor :as ed]
+            [lt.plugins.auto-complete :as auto-complete]
             [lt.objs.clients.ws :as ws]
             [lt.objs.files :as files]
             [lt.objs.clients :as clients]
@@ -51,20 +52,14 @@
         fs (filter func (:files @ws))]
     (concat fs (mapcat #(files/filter-walk func %) ds))))
 
-(comment
-  ;; Position
-  (-> (pool/last-active)
-      (ed/->cursor))
-
-  ;; Text value
-  (-> (pool/last-active)
-      (ed/->val))
-
-  ;; Path
-  (-> (pool/last-active)
-      deref
-      :info
-      :path))
+(defn ed->req [editor type]
+  (let [path (-> @editor :info :path)]
+    (clj->js {:query {:type (name type)
+                      :file path
+                      :end (ed/->cursor editor)}
+              :files [{:name path
+                      :text (ed/->val editor)
+                      :type "full"}]})))
 
 
 (behavior ::start-server
@@ -74,7 +69,7 @@
                       (let [server (tern-server {:getFile (fn [path]
                                                             (files/bomless-read path))
                                                  :async false
-                                                 :def [(tern-def "browser.json")
+                                                 :defs [(tern-def "browser.json")
                                                        (tern-def "ecma5.json")]})]
                         (object/merge! this {::instance server}))
                       (object/raise this :import-current-workspace)))
@@ -90,6 +85,7 @@
           :reaction (fn [this paths]
                       (add-files this paths)))
 
+
 (object/object* ::tern-server
                 :tags #{:tern-server}
                 :behaviors [::import-current-workspace
@@ -98,6 +94,47 @@
 
 (def ts (object/create ::tern-server))
 
+(map #(.-name %) #js [#js {:name "asdf"}])
+
+(behavior ::trigger-update-hints
+          :triggers #{:editor.javascript.hints.update!}
+          :reaction (fn [editor]
+                      (let [req (ed->req editor :completions)
+                            server (::instance @ts)
+                            cb (fn [e data]
+                                 (object/raise editor :editor.javascript.hints.result data))]
+                        (.request server req cb))))
+
+(behavior ::finish-update-hints
+          :triggers #{:editor.javascript.hints.result}
+          :reaction (fn [editor res]
+                      (->> (when res (.-completions res))
+                           (map #(do #js {:completion %}))
+                           (hash-map ::hints)
+                           (object/merge! editor))
+                      (object/raise auto-complete/hinter :refresh!)))
+
+(behavior ::use-tern-hints
+          :triggers #{:hints+}
+          :reaction (fn [editor hints token]
+                      (object/raise editor :editor.javascript.hints.update!)
+                      (if-let [js-hints (::hints @editor)]
+                        (concat hints js-hints)
+                        hints)))
+(comment
+  ;; Position
+  (-> (pool/last-active)
+      (ed/->cursor))
+
+  ;; Text value
+  (-> (pool/last-active)
+      (ed/->val))
+
+  ;; Path
+  (-> (pool/last-active)
+      deref
+      :info
+      :path))
 
 ;; Playground
 (comment

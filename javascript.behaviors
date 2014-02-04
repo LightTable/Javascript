@@ -5,8 +5,12 @@
                          :lt.plugins.js/watch-src
                          :lt.plugins.js/js-watch
                          (:lt.object/add-tag :watchable)
-                         :lt.plugins.js.tern/js-hints]
-     :tern-server [:lt.plugins.js.tern/start-server]
+                         :lt.plugins.js.tern/use-tern-hints
+                         :lt.plugins.js.tern/finish-update-hints
+                         :lt.plugins.js.tern/trigger-update-hints]
+     :tern-server [:lt.plugins.js.tern/start-server
+                   :lt.plugins.js.tern/import-current-workspace
+                   :lt.plugins.js.tern/add-files]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
                                          {:name "JSON" :exts [:json] :mime "application/json" :tags [:editor.javascript :editor.json]}])]
      :nodejs.client [:lt.plugins.js.node/init-debugger!
