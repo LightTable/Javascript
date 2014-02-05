@@ -1,8 +1,33 @@
-// This is a comment
+var child = require('child_process').fork('ternserver.js');
 
-function blergs(a, b) {
-  console.log(b);
-  return +a;
+function sendRequest(proc) {
+  var data = {
+    type: 'request',
+    msg: {
+      query: {
+        type: 'completions',
+        file: 'blergs.js',
+        end: {ch: 2, line: 1},
+        types: true,
+        docs: true
+      },
+      files: [{
+        type: 'full',
+        text: '\r\nre\r\n',
+        name: 'blergs.js'
+      }]
+    }
+  }
+  proc.send(data);
 }
 
-bl
+var result;
+function listen(proc) {
+  proc.on('message', function(data) {
+    console.log(data);
+    result = data;
+  });
+}
+
+listen(child);
+sendRequest(child);

@@ -5,7 +5,6 @@
                          :lt.plugins.js/watch-src
                          :lt.plugins.js/js-watch
                          (:lt.object/add-tag :watchable)
-                         :lt.plugins.js.tern/use-tern-hints
                          :lt.plugins.js.tern/finish-update-hints
                          :lt.plugins.js.tern/trigger-update-hints]
      :tern-server [:lt.plugins.js.tern/start-server
