@@ -24,11 +24,6 @@
 ;;(def ternserver-path (escape-spaces (files/join plugins/*plugin-dir* "node" "ternserver.js")))
 (def ternserver-path (files/join plugins/user-plugins-dir "Javascript"  "node" "ternserver.js"))
 
-(defn add-files [ts paths]
-  (let [server (::instance @ts)]
-    (doseq [p paths]
-      (.addFile server p (files/bomless-read p)))))
-
 (defn all-js-files [ws]
   (let [reg #"\.js$"
         func #(re-find reg %)
@@ -45,48 +40,17 @@
                       :text (ed/->val editor)
                       :type "full"}]})))
 
-
-
-;; Autocomplete
-
-(behavior ::trigger-update-hints
-          :triggers #{:editor.javascript.hints.update!}
-          :reaction (fn [editor]
-                      (let [req (ed->req editor :completions)
-                            server (::instance @ts)
-                            cb (fn [e data]
-                                 (object/raise editor :editor.javascript.hints.result data))]
-                        (.request server req cb))))
-
-(behavior ::finish-update-hints
-          :triggers #{:editor.javascript.hints.result}
-          :reaction (fn [editor res]
-                      (->> (when res (.-completions res))
-                           (map #(do #js {:completion %}))
-                           (hash-map ::hints)
-                           (object/merge! editor))
-                      (object/raise auto-complete/hinter :refresh!)))
-
-(behavior ::use-tern-hints
-          :triggers #{:hints+}
-          :reaction (fn [editor hints token]
-                      (object/raise editor :editor.javascript.hints.update!)
-                      (if-let [js-hints (::hints @editor)]
-                        (concat hints js-hints)
-                        hints)))
-
 ;; Client
 
 (behavior ::send!
           :triggers #{:send!}
           :reaction (fn [this msg]
-                      (.send (::worker @this)
-                             (clj->js msg))))
+                      (let [op (:command msg)
+                            id (:cb msg)
+                            info (:data msg)]
+                        (.send (::worker @this)
+                               (clj->js (merge {:id id :op op} info))))))
 
-(behavior ::message
-          :triggers #{:message}
-          :reaction (fn [this resp]
-                      (.log js/console resp)))
 
 (behavior ::connect
           :triggers #{:connect}
@@ -99,7 +63,9 @@
                             dis (fn []
                                   (object/raise this :disconnect))
                             msg (fn [msg]
-                                  (object/raise this :message msg))]
+                                  (object/raise this :message [(.-id msg)
+                                                               (.-op msg)
+                                                               (.-data msg)]))]
                         (.on worker "message" msg)
                         (.on worker "disconnect" dis)
                         (.on worker "exit" ext)
@@ -114,7 +80,8 @@
 (behavior ::add-files ;; need to convert over add-files function
           :triggers #{:add-files}
           :reaction (fn [this paths]
-                      (add-files this paths)))
+                      (object/raise this :send {:type "addFiles"
+                                                :msg paths})))
 
 (behavior ::error!
           :triggers #{:error!}
@@ -133,6 +100,7 @@
                       (let [cp (js/require "child_process")
                             worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
                         (object/merge! this {::worker worker})
+                        (object/raise this :import-current-workspace)
                         (object/raise this :connect))))
 
 
@@ -142,14 +110,42 @@
 
 (def tern-client (object/create ::tern.client))
 
-(object/raise tern-client :try-send!
+(clients/send tern-client :asdf
                {:type "request"
                 :msg {:query {:type "completions"
                               :file "blergs.js"
                               :end {:ch 2 :line 1}}
                       :files [{:type "full"
                                :text "\r\nre\r\n"
-                               :name "blergs.js"}]}})
+                               :name "blergs.js"}]}}
+              :only (fn [cmd data]
+                      (.log js/console data)))
+;; Autocomplete
+
+(behavior ::trigger-update-hints
+          :triggers #{:editor.javascript.hints.update!}
+          :reaction (fn [editor]
+                      (let [req (ed->req editor :completions)
+                            cb (fn [data]
+                                 (object/raise editor :editor.javascript.hints.result data))]
+                        (clients/send ternserver-path req cb))))
+
+(behavior ::finish-update-hints
+          :triggers #{:editor.javascript.hints.result}
+          :reaction (fn [editor res]
+                      (->> (get-in (js->clj res) [:data :completions])
+                           (map #(do #js {:completion %}))
+                           (hash-map ::hints)
+                           (object/merge! editor))
+                      (object/raise auto-complete/hinter :refresh!)))
+
+(behavior ::use-tern-hints
+          :triggers #{:hints+}
+          :reaction (fn [editor hints token]
+                      (object/raise editor :editor.javascript.hints.update!)
+                      (if-let [js-hints (::hints @editor)]
+                        (concat hints js-hints)
+                        hints)))
 
 (comment
   ;; Position

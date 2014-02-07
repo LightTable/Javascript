@@ -47,11 +47,16 @@ process.on('message', function(data) {
   shutdown = setTimeout(doShutdown, maxIdleTime);
   switch(data.type) {
     case 'request':
-      server.request(data.msg, function(e, data) {
+      server.request(data.msg, function(e, out) {
         console.log('Sending response...');
-        process.send({error: e, data: data});
+        process.send({error: e, data: out, id: data.id, op: data.op});
       });
       break;
+    case 'addFiles':
+      data.msg.forEach(function(x) {
+        server.addFile(x);
+      });
+    break;
   }
 });
 
