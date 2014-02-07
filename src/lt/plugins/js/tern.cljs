@@ -3,6 +3,7 @@
             [lt.objs.plugins :as plugins]
             [lt.objs.eval :as eval]
             [lt.objs.editor :as ed]
+            [lt.objs.thread :as thread]
             [lt.plugins.auto-complete :as auto-complete]
             [lt.objs.clients.ws :as ws]
             [lt.objs.files :as files]
@@ -20,25 +21,8 @@
             [lt.util.cljs :refer [js->clj]])
   (:require-macros [lt.macros :refer [behavior defui]]))
 
-(def tern-module-dir
-  (let [a (files/join plugins/user-plugins-dir "Javascript"  "node_modules" "tern")
-        b (files/join plugins/plugins-dir "Javascript" "node_modules" "tern")
-        c (files/join plugins/plugins-dir "javascript" "node_modules" "tern")
-        e (files/join plugins/*plugin-dir* "node_modules" "tern")]
-    (cond
-     (files/dir? a) a
-     (files/dir? b) b
-     (files/dir? c) c
-     :else e)))
-
-(defn tern-def [name]
-  (-> (files/join tern-module-dir "defs" name)
-      (files/bomless-read)
-      (js/JSON.parse)))
-
-(defn tern-server [opts]
-  (let [TernServer (.-Server (js/require tern-module-dir))]
-    (TernServer. (clj->js opts))))
+;;(def ternserver-path (escape-spaces (files/join plugins/*plugin-dir* "node" "ternserver.js")))
+(def ternserver-path (files/join plugins/user-plugins-dir "Javascript"  "node" "ternserver.js"))
 
 (defn add-files [ts paths]
   (let [server (::instance @ts)]
@@ -62,39 +46,8 @@
                       :type "full"}]})))
 
 
-(behavior ::start-server
-          :triggers #{:object.instant}
-          :order -7
-          :reaction (fn [this]
-                      (let [server (tern-server {:getFile (fn [path]
-                                                            (files/bomless-read path))
-                                                 :async false
-                                                 :defs [(tern-def "browser.json")
-                                                       (tern-def "ecma5.json")]})]
-                        (object/merge! this {::instance server}))
-                      (object/raise this :import-current-workspace)))
 
-(behavior ::import-current-workspace
-          :triggers #{:import-current-workspace}
-          :reaction (fn [this]
-                      (let [paths (all-js-files lt.objs.workspace/current-ws)]
-                        (object/raise this :add-files paths))))
-
-(behavior ::add-files
-          :triggers #{:add-files}
-          :reaction (fn [this paths]
-                      (add-files this paths)))
-
-
-(object/object* ::tern-server
-                :tags #{:tern-server}
-                :behaviors [::import-current-workspace
-                            ::add-files]
-                :init (fn [this] nil))
-
-(def ts (object/create ::tern-server))
-
-(map #(.-name %) #js [#js {:name "asdf"}])
+;; Autocomplete
 
 (behavior ::trigger-update-hints
           :triggers #{:editor.javascript.hints.update!}
@@ -121,6 +74,83 @@
                       (if-let [js-hints (::hints @editor)]
                         (concat hints js-hints)
                         hints)))
+
+;; Client
+
+(behavior ::send!
+          :triggers #{:send!}
+          :reaction (fn [this msg]
+                      (.send (::worker @this)
+                             (clj->js msg))))
+
+(behavior ::message
+          :triggers #{:message}
+          :reaction (fn [this resp]
+                      (.log js/console resp)))
+
+(behavior ::connect
+          :triggers #{:connect}
+          :reaction (fn [this]
+                      (let [worker (::worker @this)
+                            err (fn [e]
+                                  (object/raise this :error! e))
+                            ext (fn [code signal]
+                                  (object/raise this :exit! code signal))
+                            dis (fn []
+                                  (object/raise this :disconnect))
+                            msg (fn [msg]
+                                  (object/raise this :message msg))]
+                        (.on worker "message" msg)
+                        (.on worker "disconnect" dis)
+                        (.on worker "exit" ext)
+                        (.on worker "error" err))))
+
+(behavior ::import-current-workspace ;; probably not what we really want to do
+          :triggers #{:import-current-workspace}
+          :reaction (fn [this]
+                      (let [paths (all-js-files lt.objs.workspace/current-ws)]
+                        (object/raise this :add-files paths))))
+
+(behavior ::add-files ;; need to convert over add-files function
+          :triggers #{:add-files}
+          :reaction (fn [this paths]
+                      (add-files this paths)))
+
+(behavior ::error!
+          :triggers #{:error!}
+          :reaction (fn [e]
+                      (.log js/console "Tern client error:")
+                      (.log js/console e)))
+
+(behavior ::kill!
+          :triggers #{:kill!}
+          :reactions (fn [this]
+                       (.kill (::worker @this))))
+
+(behavior ::init
+          :triggers #{:queue!}
+          :reaction (fn [this _]
+                      (let [cp (js/require "child_process")
+                            worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
+                        (object/merge! this {::worker worker})
+                        (object/raise this :connect))))
+
+
+(object/object* ::tern.client
+                :tags #{:client :tern.client}
+                :init (fn [this] nil))
+
+(def tern-client (object/create ::tern.client))
+
+(object/raise tern-client :try-send!
+               {:type "request"
+                :msg {:query {:type "completions"
+                              :file "blergs.js"
+                              :end {:ch 2 :line 1}}
+                      :files [{:type "full"
+                               :text "\r\nre\r\n"
+                               :name "blergs.js"}]}})
+
 (comment
   ;; Position
   (-> (pool/last-active)
@@ -168,6 +198,8 @@
 
   (def other-file (files/join (:path (user-plugin-info "Javascript" ))
                               "blah.js" ))
+  (def cp (js/require "child_process"))
+  (def worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true}))
 
   (def compl (atom nil))
 
