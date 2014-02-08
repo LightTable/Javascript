@@ -368,51 +368,35 @@ lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.node","k
 if(!lt.util.load.provided_QMARK_('lt.plugins.js.tern')) {
 goog.provide('lt.plugins.js.tern');
 goog.require('cljs.core');
-goog.require('lt.util.dom');
 goog.require('lt.util.cljs');
 goog.require('lt.objs.thread');
 goog.require('lt.objs.plugins');
 goog.require('lt.objs.sidebar.command');
 goog.require('lt.objs.files');
-goog.require('lt.util.dom');
-goog.require('lt.objs.popup');
-goog.require('lt.objs.popup');
 goog.require('lt.plugins.auto_complete');
 goog.require('lt.objs.notifos');
-goog.require('lt.objs.browser');
 goog.require('lt.objs.notifos');
 goog.require('lt.objs.editor.pool');
-goog.require('clojure.string');
 goog.require('lt.objs.clients.ws');
 goog.require('lt.util.cljs');
 goog.require('lt.objs.files');
 goog.require('lt.objs.thread');
-goog.require('lt.objs.sidebar.clients');
 goog.require('lt.objs.plugins');
 goog.require('lt.plugins.auto_complete');
-goog.require('lt.plugins.watches');
-goog.require('lt.objs.eval');
 goog.require('lt.objs.clients');
-goog.require('lt.util.load');
-goog.require('clojure.string');
-goog.require('lt.objs.browser');
-goog.require('lt.plugins.watches');
 goog.require('lt.objs.editor');
 goog.require('lt.object');
 goog.require('lt.object');
-goog.require('lt.util.load');
 goog.require('lt.objs.clients.ws');
-goog.require('lt.objs.eval');
 goog.require('lt.objs.clients');
 goog.require('lt.objs.editor.pool');
-goog.require('lt.objs.sidebar.clients');
 goog.require('lt.objs.sidebar.command');
 goog.require('lt.objs.editor');
 lt.plugins.js.tern.ternserver_path = lt.objs.files.join.call(null,lt.objs.plugins.user_plugins_dir,"Javascript","node","ternserver.js");
 lt.plugins.js.tern.all_js_files = (function all_js_files(ws){var reg = /\.js$/;var func = ((function (reg){
-return (function (p1__8541_SHARP_){return cljs.core.re_find.call(null,reg,p1__8541_SHARP_);
+return (function (p1__9070_SHARP_){return cljs.core.re_find.call(null,reg,p1__9070_SHARP_);
 });})(reg))
-;var ds = new cljs.core.Keyword(null,"folders","folders",4625622327).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,ws));var fs = cljs.core.filter.call(null,func,new cljs.core.Keyword(null,"files","files",1111338473).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,ws)));return cljs.core.concat.call(null,fs,cljs.core.mapcat.call(null,(function (p1__8542_SHARP_){return lt.objs.files.filter_walk.call(null,func,p1__8542_SHARP_);
+;var ds = new cljs.core.Keyword(null,"folders","folders",4625622327).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,ws));var fs = cljs.core.filter.call(null,func,new cljs.core.Keyword(null,"files","files",1111338473).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,ws)));return cljs.core.concat.call(null,fs,cljs.core.mapcat.call(null,(function (p1__9071_SHARP_){return lt.objs.files.filter_walk.call(null,func,p1__9071_SHARP_);
 }),ds));
 });
 lt.plugins.js.tern.ed__GT_req = (function ed__GT_req(editor,type){var path = new cljs.core.Keyword(null,"path","path",1017337751).cljs$core$IFn$_invoke$arity$1(new cljs.core.Keyword(null,"info","info",1017141280).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,editor)));return cljs.core.clj__GT_js.call(null,new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"query","query",1121848378),new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"type","type",1017479852),cljs.core.name.call(null,type),new cljs.core.Keyword(null,"file","file",1017047278),path,new cljs.core.Keyword(null,"end","end",1014004813),lt.objs.editor.__GT_cursor.call(null,editor)], null),new cljs.core.Keyword(null,"files","files",1111338473),new cljs.core.PersistentVector(null, 1, 5, cljs.core.PersistentVector.EMPTY_NODE, [new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"name","name",1017277949),path,new cljs.core.Keyword(null,"text","text",1017460895),lt.objs.editor.__GT_val.call(null,editor),new cljs.core.Keyword(null,"type","type",1017479852),"full"], null)], null)], null));
@@ -420,50 +404,51 @@ lt.plugins.js.tern.ed__GT_req = (function ed__GT_req(editor,type){var path = new
 lt.plugins.js.tern.__BEH__send = (function __BEH__send(this$,msg){return new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$)).send(cljs.core.clj__GT_js.call(null,msg));
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","send","lt.plugins.js.tern/send",2101952487),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__send,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"send!","send!",1123226891),null], null), null));
-lt.plugins.js.tern.__BEH__connect = (function __BEH__connect(this$){var worker = new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$));var err = ((function (worker){
-return (function (e){return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"error!","error!",4014236299),e);
+lt.plugins.js.tern.__BEH__connect = (function __BEH__connect(this$){var worker = new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$));var dis = ((function (worker){
+return (function (code,signal){return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"disconnect","disconnect",1544309774));
 });})(worker))
-;var ext = ((function (worker,err){
-return (function (code,signal){return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"disconnect","disconnect",1544309774),code,signal);
-});})(worker,err))
-;var dis = ((function (worker,err,ext){
-return (function (){return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"disconnect","disconnect",1544309774));
-});})(worker,err,ext))
-;var msg = ((function (worker,err,ext,dis){
+;var msg = ((function (worker,dis){
 return (function (m){return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"message","message",1968829305),new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, [cljs.core.symbol.call(null,m.cb),m.command,m.data], null));
-});})(worker,err,ext,dis))
+});})(worker,dis))
 ;worker.on("message",msg);
 worker.on("disconnect",dis);
-worker.on("exit",ext);
-return worker.on("error",err);
+return worker.on("exit",dis);
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","connect","lt.plugins.js.tern/connect",3033402117),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__connect,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"connect","connect",1965255772),null], null), null));
-lt.plugins.js.tern.__BEH__error = (function __BEH__error(this$,e){console.log("Tern client error:");
-return console.log(e);
+lt.plugins.js.tern.__BEH__kill = (function __BEH__kill(this$){lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"disconnect","disconnect",1544309774));
+var temp__4092__auto__ = new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$));if(cljs.core.truth_(temp__4092__auto__))
+{var worker = temp__4092__auto__;worker.kill();
+return lt.object.merge_BANG_.call(null,this$,new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881),null], null));
+} else
+{return null;
+}
 });
-lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","error","lt.plugins.js.tern/error",1608413799),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__error,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"error","error",1110689146),null], null), null));
-lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","kill","lt.plugins.js.tern/kill",2102119825),new cljs.core.Keyword(null,"reactions","reactions",4185874140),(function (this$){lt.objs.clients.rem_BANG_.call(null,this$);
-return new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$)).kill();
-}),new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"kill","kill",1017196240),null], null), null));
-lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","disconnect","lt.plugins.js.tern/disconnect",3601918675),new cljs.core.Keyword(null,"reactions","reactions",4185874140),(function (this$){var worker = new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$));if(cljs.core.truth_(worker.connected))
-{worker.disconnect();
+lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","kill","lt.plugins.js.tern/kill",2102119825),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__kill,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"kill","kill",1017196240),null], null), null));
+lt.plugins.js.tern.__BEH__disconnect = (function __BEH__disconnect(this$){var temp__4092__auto___9073 = new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$));if(cljs.core.truth_(temp__4092__auto___9073))
+{var worker_9074 = temp__4092__auto___9073;if(cljs.core.truth_(worker_9074.connected))
+{worker_9074.disconnect();
 } else
 {}
-return lt.object.merge_BANG_.call(null,this$,new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"connected","connected",4729661051),false], null));
-}),new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"disconnect","disconnect",1544309774),null], null), null));
+} else
+{}
+lt.object.merge_BANG_.call(null,this$,new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"connected","connected",4729661051),false], null));
+return lt.objs.notifos.set_msg_BANG_.call(null,[cljs.core.str("Disconnected from Javascript auto-complete server")].join(''));
+});
+lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","disconnect","lt.plugins.js.tern/disconnect",3601918675),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__disconnect,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"disconnect","disconnect",1544309774),null], null), null));
 lt.plugins.js.tern.__BEH__init = (function __BEH__init(this$,_){if(cljs.core.truth_(new cljs.core.Keyword(null,"connected","connected",4729661051).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,this$))))
 {return null;
 } else
 {var cp = require("child_process");var worker = cp.fork(lt.plugins.js.tern.ternserver_path,["--harmony"],{"silent": true, "execPath": lt.objs.files.lt_home.call(null,lt.objs.thread.node_exe.call(null))});lt.object.merge_BANG_.call(null,this$,new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword("lt.plugins.js.tern","worker","lt.plugins.js.tern/worker",746320881),worker], null));
 lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"connect","connect",1965255772));
+lt.objs.notifos.set_msg_BANG_.call(null,[cljs.core.str("Connected to Javascript auto-complete server")].join(''));
 return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"import-current-workspace","import-current-workspace",1517039755));
 }
 });
-lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","init","lt.plugins.js.tern/init",2102191967),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__init,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"try-send!","try-send!",4325864057),null], null), null));
+lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","init","lt.plugins.js.tern/init",2102191967),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__init,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"try-send!","try-send!",4325864057),null], null), null),new cljs.core.Keyword(null,"order","order",1119910592),-7);
 lt.plugins.js.tern.__BEH__import_current_workspace = (function __BEH__import_current_workspace(this$){var paths = lt.plugins.js.tern.all_js_files.call(null,lt.objs.workspace.current_ws);return lt.object.raise.call(null,this$,new cljs.core.Keyword(null,"add-files","add-files",4208623037),paths);
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","import-current-workspace","lt.plugins.js.tern/import-current-workspace",3624980312),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__import_current_workspace,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"import-current-workspace","import-current-workspace",1517039755),null], null), null));
-lt.plugins.js.tern.__BEH__add_files = (function __BEH__add_files(this$,paths){return lt.objs.clients.send.call(null,this$,new cljs.core.Keyword(null,"addfiles","addfiles",4079186408),paths,new cljs.core.Keyword(null,"only","only",1017320222),this$);
+lt.plugins.js.tern.__BEH__add_files = (function __BEH__add_files(this$,paths){return lt.objs.clients.send.call(null,this$,new cljs.core.Keyword(null,"addfiles","addfiles",4079186408),paths);
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","add-files","lt.plugins.js.tern/add-files",931592870),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__add_files,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"add-files","add-files",4208623037),null], null), null));
 lt.object.object_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","tern.client","lt.plugins.js.tern/tern.client",1264083075),new cljs.core.Keyword(null,"tags","tags",1017456523),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"tern.client","tern.client",4004897758),null,new cljs.core.Keyword(null,"client","client",3951159101),null], null), null),new cljs.core.Keyword(null,"name","name",1017277949),"Tern Javascript Server",new cljs.core.Keyword(null,"init","init",1017141378),(function (this$){return null;
@@ -475,7 +460,7 @@ return (function (_,data){return lt.object.raise.call(null,editor,new cljs.core.
 ;return lt.objs.clients.send.call(null,lt.plugins.js.tern.tern_client,new cljs.core.Keyword(null,"request","request",2109597185),req,new cljs.core.Keyword(null,"only","only",1017320222),cb);
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","trigger-update-hints","lt.plugins.js.tern/trigger-update-hints",2566074676),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__trigger_update_hints,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"editor.javascript.hints.update!","editor.javascript.hints.update!",2634618216),null], null), null));
-lt.plugins.js.tern.__BEH__finish_update_hints = (function __BEH__finish_update_hints(editor,res){lt.object.merge_BANG_.call(null,editor,cljs.core.PersistentHashMap.fromArrays.call(null,[new cljs.core.Keyword("lt.plugins.js.tern","hints","lt.plugins.js.tern/hints",1611044131)],[cljs.core.map.call(null,(function (p1__8543_SHARP_){return {"completion": p1__8543_SHARP_};
+lt.plugins.js.tern.__BEH__finish_update_hints = (function __BEH__finish_update_hints(editor,res){lt.object.merge_BANG_.call(null,editor,cljs.core.PersistentHashMap.fromArrays.call(null,[new cljs.core.Keyword("lt.plugins.js.tern","hints","lt.plugins.js.tern/hints",1611044131)],[cljs.core.map.call(null,(function (p1__9072_SHARP_){return {"completion": p1__9072_SHARP_};
 }),res.completions)]));
 return lt.object.raise.call(null,lt.plugins.auto_complete.hinter,new cljs.core.Keyword(null,"refresh!","refresh!",4597922840));
 });
@@ -486,12 +471,19 @@ lt.object.raise.call(null,editor,new cljs.core.Keyword(null,"editor.javascript.h
 } else
 {}
 var temp__4090__auto__ = new cljs.core.Keyword("lt.plugins.js.tern","hints","lt.plugins.js.tern/hints",1611044131).cljs$core$IFn$_invoke$arity$1(cljs.core.deref.call(null,editor));if(cljs.core.truth_(temp__4090__auto__))
-{var js_hints = temp__4090__auto__;return cljs.core.concat.call(null,js_hints,hints);
+{var js_hints = temp__4090__auto__;return js_hints;
 } else
 {return hints;
 }
 });
 lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","use-tern-hints","lt.plugins.js.tern/use-tern-hints",3503014781),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__use_tern_hints,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"hints+","hints+",4091697745),null], null), null));
+lt.plugins.js.tern.__BEH__clear_token = (function __BEH__clear_token(){return lt.objs.sidebar.command.exec_BANG_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","clear-token","lt.plugins.js.tern/clear-token",4776884472));
+});
+lt.object.behavior_STAR_.call(null,new cljs.core.Keyword("lt.plugins.js.tern","clear-token","lt.plugins.js.tern/clear-token",4776884472),new cljs.core.Keyword(null,"reaction","reaction",4441361819),lt.plugins.js.tern.__BEH__clear_token,new cljs.core.Keyword(null,"triggers","triggers",2516997421),new cljs.core.PersistentHashSet(null, new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"escape!","escape!",3844244274),null,new cljs.core.Keyword(null,"select-unknown","select-unknown",2733767659),null,new cljs.core.Keyword(null,"select","select",4402849902),null], null), null));
+lt.objs.sidebar.command.command.call(null,new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"command","command",1964298941),new cljs.core.Keyword("lt.plugins.js.tern","clear-token","lt.plugins.js.tern/clear-token",4776884472),new cljs.core.Keyword(null,"desc","desc",1016984067),"Editor: Clear last Tern token",new cljs.core.Keyword(null,"exec","exec",1017031683),(function (){return lt.object.merge_BANG_.call(null,lt.objs.editor.pool.last_active.call(null),new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword("lt.plugins.js.tern","token","lt.plugins.js.tern/token",1604864632),new cljs.core.Keyword(null,"none","none",1017291434),new cljs.core.Keyword("lt.plugins.js.tern","hints","lt.plugins.js.tern/hints",1611044131),null], null));
+})], null));
+lt.objs.sidebar.command.command.call(null,new cljs.core.PersistentArrayMap(null, 3, [new cljs.core.Keyword(null,"command","command",1964298941),new cljs.core.Keyword(null,"tern.kill","tern.kill",3023953841),new cljs.core.Keyword(null,"desc","desc",1016984067),"Tern: Kill the Tern auto-completion server",new cljs.core.Keyword(null,"exec","exec",1017031683),(function (){return lt.object.raise.call(null,lt.plugins.js.tern.tern_client,new cljs.core.Keyword(null,"kill","kill",1017196240));
+})], null));
 }
 if(!lt.util.load.provided_QMARK_('lt.plugins.js')) {
 goog.provide('lt.plugins.js');
