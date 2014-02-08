@@ -77,18 +77,20 @@
                       (.log js/console e)))
 
 (behavior ::kill
-          :triggers #{:kill}
-          :reactions (fn [this]
-                       (.kill (::worker @this))
-                       (object/raise this :disconnect)))
+          :triggers #{:blergs}
+          :reaction (fn [this]
+                      (object/raise this :disconnect)
+                      (when-let [worker (::worker @this)]
+                        (.kill worker)
+                        (object/merge! this {::worker nil}))))
 
 (behavior ::disconnect
           :triggers #{:disconnect}
-          :reactions (fn [this]
-                       (let [worker (::worker @this)]
-                         (when (.-connected worker)
-                           (.disconnect worker))
-                         (object/merge! this {:connected false}))))
+          :reaction (fn [this]
+                      (when-let [worker (::worker @this)]
+                        (when (.-connected worker)
+                          (.disconnect worker)))
+                      (object/merge! this {:connected false})))
 
 (behavior ::init
           :triggers #{:try-send!}
@@ -157,8 +159,12 @@
                       (cmd/exec! ::clear-token)))
 
 (cmd/command {:command ::clear-token
-              :hidden true
               :desc "Editor: Clear last Tern token"
               :exec (fn []
                       (object/merge! (pool/last-active) {::token :none
                                                          ::hints nil}))})
+
+(cmd/command {:command :tern.kill
+              :desc "Tern: Kill the Tern auto-completion server"
+              :exec (fn []
+                      (object/raise tern-client :kill))})
