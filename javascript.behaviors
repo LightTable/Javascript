@@ -7,8 +7,7 @@
                          (:lt.object/add-tag :watchable)
                          :lt.plugins.js.tern/finish-update-hints
                          :lt.plugins.js.tern/trigger-update-hints
-                         :lt.plugins.js.tern/use-tern-hints
-                         :lt.plugins.js.tern/clear-token]
+                         :lt.plugins.js.tern/use-tern-hints]
      :hinter [:lt.plugins.js.tern/clear-token]
      :tern.client [:lt.objs.clients/handle-message
                    :lt.objs.clients/on-connect-drain
@@ -16,11 +15,11 @@
                    :lt.objs.clients/queue!
                    :lt.plugins.js.tern/send
                    :lt.plugins.js.tern/connect
-                   :lt.plugins.js.tern/error
                    :lt.plugins.js.tern/kill
                    :lt.plugins.js.tern/disconnect
                    :lt.plugins.js.tern/init
                    :lt.plugins.js.tern/add-files
+                   :lt.plugins.js.tern/import-current-workspace
                    ]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
                                          {:name "JSON" :exts [:json] :mime "application/json" :tags [:editor.javascript :editor.json]}])]

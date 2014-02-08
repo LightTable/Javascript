@@ -51,7 +51,7 @@
                              (clj->js msg))))
 
 
-(behavior ::connect
+(behavior ::connect ;; TODO: handle all messages from server correctly with new format
           :triggers #{:connect}
           :reaction (fn [this]
                       (let [worker (::worker @this)
@@ -69,22 +69,15 @@
                         (.on worker "exit" dis)
                         (.on worker "error" err))))
 
-
-(behavior ::error
-          :triggers #{:error}
-          :reaction (fn [this e]
-                      (.log js/console "Tern client error:")
-                      (.log js/console e)))
-
-(behavior ::kill
-          :triggers #{:blergs}
+(behavior ::kill ;; TODO: Notify OS we have killed the server
+          :triggers #{:kill}
           :reaction (fn [this]
                       (object/raise this :disconnect)
                       (when-let [worker (::worker @this)]
                         (.kill worker)
                         (object/merge! this {::worker nil}))))
 
-(behavior ::disconnect
+(behavior ::disconnect ;; TODO: Maybe notify os on disconnect
           :triggers #{:disconnect}
           :reaction (fn [this]
                       (when-let [worker (::worker @this)]
@@ -92,7 +85,7 @@
                           (.disconnect worker)))
                       (object/merge! this {:connected false})))
 
-(behavior ::init
+(behavior ::init ;; TODO: Notify OS that we are connecting
           :triggers #{:try-send!}
           :order -7
           :reaction (fn [this _]
