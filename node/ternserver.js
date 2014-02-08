@@ -40,26 +40,25 @@ var config = {
 
 var server = new tern.Server(config);
 
-process.on('message', function(data) {
-  console.log('Recieved message');
-  console.log(JSON.stringify(data));
+process.on('message', function(msg) {
   clearTimeout(shutdown);
   shutdown = setTimeout(doShutdown, maxIdleTime);
-  switch(data.type) {
+  switch(msg.command) {
     case 'request':
-      server.request(data.msg, function(e, out) {
-        console.log('Sending response...');
-        process.send({error: e, data: out, id: data.id, op: data.op});
+      server.request(msg.data, function(e, out) {
+        msg.data = out;
+        process.send(msg);
       });
       break;
-    case 'addFiles':
-      data.msg.forEach(function(x) {
+    case 'addfiles':
+      msg.data.forEach(function(x) {
         server.addFile(x);
       });
+      msg.data = 'success';
+      process.send(msg);
     break;
   }
 });
 
 process.on("SIGINT", function() { process.exit(); });
 process.on("SIGTERM", function() { process.exit(); });
-console.log('Listening for messages...');

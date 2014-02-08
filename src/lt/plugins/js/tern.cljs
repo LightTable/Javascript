@@ -47,11 +47,8 @@
 (behavior ::send
           :triggers #{:send!}
           :reaction (fn [this msg]
-                      (let [op (:command msg)
-                            id (:cb msg)
-                            info (:data msg)]
-                        (.send (::worker @this)
-                               (clj->js (merge {:id id :op op} info))))))
+                      (.send (::worker @this)
+                             (clj->js msg))))
 
 
 (behavior ::connect
@@ -61,18 +58,17 @@
                             err (fn [e]
                                   (object/raise this :error! e))
                             ext (fn [code signal]
-                                  (object/raise this :disconnect))
+                                  (object/raise this :disconnect code signal))
                             dis (fn []
                                   (object/raise this :disconnect))
                             msg (fn [m]
-                                  (object/raise this :message [(symbol (.-id m))
-                                                               (.-op m)
+                                  (object/raise this :message [(symbol (.-cb m))
+                                                               (.-command m)
                                                                (.-data m)]))]
                         (.on worker "message" msg)
                         (.on worker "disconnect" dis)
                         (.on worker "exit" ext)
                         (.on worker "error" err))))
-
 
 (behavior ::error
           :triggers #{:error}
@@ -89,18 +85,21 @@
 (behavior ::disconnect
           :triggers #{:disconnect}
           :reactions (fn [this]
-                       (.disconnect (::worker @this))
-                       (object/merge! this {:connected false})))
+                       (let [worker (::worker @this)]
+                         (when (.-connected worker)
+                           (.disconnect worker))
+                         (object/merge! this {:connected false}))))
 
 (behavior ::init
-          :triggers #{:queue!}
+          :triggers #{:try-send!}
           :reaction (fn [this _]
                       (when-not (:connected @this)
                         (let [cp (js/require "child_process")
                               worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
                           (object/merge! this {::worker worker})
-                          (object/raise this :import-current-workspace)
-                          (object/raise this :connect)))))
+                          (object/raise this :connect)
+                          (object/raise this :import-current-workspace)))))
+
 
 (behavior ::import-current-workspace ;; probably not what we really want to do
           :triggers #{:import-current-workspace}
@@ -111,40 +110,41 @@
 (behavior ::add-files ;; need to convert over add-files function
           :triggers #{:add-files}
           :reaction (fn [this paths]
-                      (object/raise this :send {:type "addFiles"
-                                                :msg paths})))
+                      (clients/send this :addfiles paths :only this)))
+
 
 (object/object* ::tern.client
                 :tags #{:client :tern.client}
+                :name "Tern Javascript Server"
                 :init (fn [this] nil))
 
 (def tern-client (object/create ::tern.client))
 
 
-(clients/send tern-client :asdf
-               {:type "request"
-                :msg {:query {:type "completions"
-                              :file "blergs.js"
-                              :end {:ch 2 :line 1}}
-                      :files [{:type "full"
-                               :text "\r\nco\r\n"
-                               :name "blergs.js"}]}}
-              :only (fn [cmd data]
-                      (.log js/console data)))
+;; (clients/send tern-client :request
+;;                 {:query {:type "completions"
+;;                               :file "blergs.js"
+;;                               :end {:ch 2 :line 1}}
+;;                       :files [{:type "full"
+;;                                :text "\r\nco\r\n"
+;;                                :name "blergs.js"}]}
+;;               :only (fn [cmd data]
+;;                       (.log js/console data)))
 ;; Autocomplete
 
 (behavior ::trigger-update-hints
           :triggers #{:editor.javascript.hints.update!}
           :reaction (fn [editor]
                       (let [req (ed->req editor :completions)
-                            cb (fn [data]
+                            cb (fn [_ data]
                                  (object/raise editor :editor.javascript.hints.result data))]
-                        (clients/send ternserver-path req cb))))
+                        (clients/send tern-client :request req :only cb))))
 
 (behavior ::finish-update-hints
           :triggers #{:editor.javascript.hints.result}
           :reaction (fn [editor res]
-                      (->> (get-in (js->clj res) [:data :completions])
+                      (->> res
+                           (.-completions)
                            (map #(do #js {:completion %}))
                            (hash-map ::hints)
                            (object/merge! editor))
@@ -153,9 +153,11 @@
 (behavior ::use-tern-hints
           :triggers #{:hints+}
           :reaction (fn [editor hints token]
-                      (object/raise editor :editor.javascript.hints.update!)
+                      (when (not= token (::token @editor))
+                        (object/merge! editor {::token token})
+                        (object/raise editor :editor.javascript.hints.update!))
                       (if-let [js-hints (::hints @editor)]
-                        (concat hints js-hints)
+                        (concat js-hints hints)
                         hints)))
 
 (comment
