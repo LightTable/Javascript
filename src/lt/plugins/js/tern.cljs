@@ -1,23 +1,15 @@
 (ns lt.plugins.js.tern
   (:require [lt.object :as object]
             [lt.objs.plugins :as plugins]
-            [lt.objs.eval :as eval]
             [lt.objs.editor :as ed]
             [lt.objs.thread :as thread]
             [lt.plugins.auto-complete :as auto-complete]
             [lt.objs.clients.ws :as ws]
             [lt.objs.files :as files]
             [lt.objs.clients :as clients]
-            [lt.objs.sidebar.clients :as scl]
-            [lt.objs.browser :as browser]
             [lt.objs.editor.pool :as pool]
             [lt.objs.notifos :as notifos]
             [lt.objs.sidebar.command :as cmd]
-            [lt.objs.popup :as popup]
-            [lt.plugins.watches :as watches]
-            [lt.util.load :as load]
-            [clojure.string :as string]
-            [lt.util.dom :refer [$ append]]
             [lt.util.cljs :refer [js->clj]])
   (:require-macros [lt.macros :refer [behavior defui]]))
 
@@ -41,8 +33,9 @@
                       :text (ed/->val editor)
                       :type "full"}]})))
 
-
+;;****************************************************
 ;; Client
+;;****************************************************
 
 (behavior ::send
           :triggers #{:send!}
@@ -51,14 +44,11 @@
                              (clj->js msg))))
 
 
-(behavior ::connect ;; TODO: handle all messages from server correctly with new format
+(behavior ::connect
           :triggers #{:connect}
           :reaction (fn [this]
                       (let [worker (::worker @this)
-                            err (fn [e]
-                                  (object/raise this :error! e))
                             dis (fn [code signal]
-                                  (println (str "Code: " code " Singnal: " signal))
                                   (object/raise this :disconnect))
                             msg (fn [m]
                                   (object/raise this :message [(symbol (.-cb m))
@@ -66,10 +56,10 @@
                                                                (.-data m)]))]
                         (.on worker "message" msg)
                         (.on worker "disconnect" dis)
-                        (.on worker "exit" dis)
-                        (.on worker "error" err))))
+                        (.on worker "exit" dis))))
 
-(behavior ::kill ;; TODO: Notify OS we have killed the server
+
+(behavior ::kill
           :triggers #{:kill}
           :reaction (fn [this]
                       (object/raise this :disconnect)
@@ -77,15 +67,18 @@
                         (.kill worker)
                         (object/merge! this {::worker nil}))))
 
-(behavior ::disconnect ;; TODO: Maybe notify os on disconnect
+
+(behavior ::disconnect
           :triggers #{:disconnect}
           :reaction (fn [this]
                       (when-let [worker (::worker @this)]
                         (when (.-connected worker)
                           (.disconnect worker)))
-                      (object/merge! this {:connected false})))
+                      (object/merge! this {:connected false})
+                      (notifos/set-msg! (str "Disconnected from Javascript auto-complete server"))))
 
-(behavior ::init ;; TODO: Notify OS that we are connecting
+
+(behavior ::init
           :triggers #{:try-send!}
           :order -7
           :reaction (fn [this _]
@@ -94,6 +87,7 @@
                               worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
                           (object/merge! this {::worker worker})
                           (object/raise this :connect)
+                          (notifos/set-msg! (str "Connected to Javascript auto-complete server"))
                           (object/raise this :import-current-workspace)))))
 
 
@@ -102,6 +96,7 @@
           :reaction (fn [this]
                       (let [paths (all-js-files lt.objs.workspace/current-ws)]
                         (object/raise this :add-files paths))))
+
 
 (behavior ::add-files ;; need to convert over add-files function
           :triggers #{:add-files}
@@ -116,7 +111,9 @@
 
 (def tern-client (object/create ::tern.client))
 
+;;****************************************************
 ;; Autocomplete
+;;****************************************************
 
 (behavior ::trigger-update-hints
           :triggers #{:editor.javascript.hints.update!}
@@ -125,6 +122,7 @@
                             cb (fn [_ data]
                                  (object/raise editor :editor.javascript.hints.result data))]
                         (clients/send tern-client :request req :only cb))))
+
 
 (behavior ::finish-update-hints
           :triggers #{:editor.javascript.hints.result}
@@ -136,6 +134,7 @@
                            (object/merge! editor))
                       (object/raise auto-complete/hinter :refresh!)))
 
+
 (behavior ::use-tern-hints
           :triggers #{:hints+}
           :reaction (fn [editor hints token]
@@ -146,16 +145,19 @@
                         js-hints
                         hints)))
 
+
 (behavior ::clear-token
           :triggers #{:select :select-unknown :escape!}
           :reaction (fn []
                       (cmd/exec! ::clear-token)))
+
 
 (cmd/command {:command ::clear-token
               :desc "Editor: Clear last Tern token"
               :exec (fn []
                       (object/merge! (pool/last-active) {::token :none
                                                          ::hints nil}))})
+
 
 (cmd/command {:command :tern.kill
               :desc "Tern: Kill the Tern auto-completion server"
