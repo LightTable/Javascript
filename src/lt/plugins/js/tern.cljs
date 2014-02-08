@@ -24,6 +24,7 @@
 ;;(def ternserver-path (escape-spaces (files/join plugins/*plugin-dir* "node" "ternserver.js")))
 (def ternserver-path (files/join plugins/user-plugins-dir "Javascript"  "node" "ternserver.js"))
 
+
 (defn all-js-files [ws]
   (let [reg #"\.js$"
         func #(re-find reg %)
@@ -40,9 +41,10 @@
                       :text (ed/->val editor)
                       :type "full"}]})))
 
+
 ;; Client
 
-(behavior ::send!
+(behavior ::send
           :triggers #{:send!}
           :reaction (fn [this msg]
                       (let [op (:command msg)
@@ -59,17 +61,46 @@
                             err (fn [e]
                                   (object/raise this :error! e))
                             ext (fn [code signal]
-                                  (object/raise this :exit! code signal))
+                                  (object/raise this :disconnect))
                             dis (fn []
                                   (object/raise this :disconnect))
-                            msg (fn [msg]
-                                  (object/raise this :message [(.-id msg)
-                                                               (.-op msg)
-                                                               (.-data msg)]))]
+                            msg (fn [m]
+                                  (object/raise this :message [(symbol (.-id m))
+                                                               (.-op m)
+                                                               (.-data m)]))]
                         (.on worker "message" msg)
                         (.on worker "disconnect" dis)
                         (.on worker "exit" ext)
                         (.on worker "error" err))))
+
+
+(behavior ::error
+          :triggers #{:error}
+          :reaction (fn [this e]
+                      (.log js/console "Tern client error:")
+                      (.log js/console e)))
+
+(behavior ::kill
+          :triggers #{:kill}
+          :reactions (fn [this]
+                       (clients/rem! this) ;; triggers :disconnect
+                       (.kill (::worker @this))))
+
+(behavior ::disconnect
+          :triggers #{:disconnect}
+          :reactions (fn [this]
+                       (.disconnect (::worker @this))
+                       (object/merge! this {:connected false})))
+
+(behavior ::init
+          :triggers #{:queue!}
+          :reaction (fn [this _]
+                      (when-not (:connected @this)
+                        (let [cp (js/require "child_process")
+                              worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
+                          (object/merge! this {::worker worker})
+                          (object/raise this :import-current-workspace)
+                          (object/raise this :connect)))))
 
 (behavior ::import-current-workspace ;; probably not what we really want to do
           :triggers #{:import-current-workspace}
@@ -83,32 +114,12 @@
                       (object/raise this :send {:type "addFiles"
                                                 :msg paths})))
 
-(behavior ::error!
-          :triggers #{:error!}
-          :reaction (fn [e]
-                      (.log js/console "Tern client error:")
-                      (.log js/console e)))
-
-(behavior ::kill!
-          :triggers #{:kill!}
-          :reactions (fn [this]
-                       (.kill (::worker @this))))
-
-(behavior ::init
-          :triggers #{:queue!}
-          :reaction (fn [this _]
-                      (let [cp (js/require "child_process")
-                            worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true})]
-                        (object/merge! this {::worker worker})
-                        (object/raise this :import-current-workspace)
-                        (object/raise this :connect))))
-
-
 (object/object* ::tern.client
                 :tags #{:client :tern.client}
                 :init (fn [this] nil))
 
 (def tern-client (object/create ::tern.client))
+
 
 (clients/send tern-client :asdf
                {:type "request"
@@ -116,7 +127,7 @@
                               :file "blergs.js"
                               :end {:ch 2 :line 1}}
                       :files [{:type "full"
-                               :text "\r\nre\r\n"
+                               :text "\r\nco\r\n"
                                :name "blergs.js"}]}}
               :only (fn [cmd data]
                       (.log js/console data)))

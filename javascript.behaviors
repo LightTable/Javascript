@@ -8,12 +8,13 @@
                          :lt.plugins.js.tern/finish-update-hints
                          :lt.plugins.js.tern/trigger-update-hints
                          :lt.plugins.js.tern/use-tern-hints]
-     :tern.client [:lt.plugins.js.tern/connect
-                   :lt.plugins.js.tern/send!
-                   :lt.plugins.js.tern/message
+     :client [:lt.objs.clients/handle-message]
+     :tern.client [:lt.plugins.js.tern/send
+                   :lt.plugins.js.tern/connect
+                   :lt.plugins.js.tern/error
+                   :lt.plugins.js.tern/kill
+                   :lt.plugins.js.tern/disconnect
                    :lt.plugins.js.tern/init
-                   :lt.plugins.js.tern/kill!
-                   :lt.plugins.js.tern/error!
                    :lt.plugins.js.tern/add-files
                    :lt.plugins.js.tern/import-current-workspace]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
