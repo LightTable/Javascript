@@ -31,34 +31,55 @@ function loadPlugins(dir) {
   return plugins;
 }
 
+function send(err, data, msg) {
+  var result = {cb: -1};
+  if (msg) {
+    result.cb = msg.cb;
+    result.command = msg.command;
+  }
+  if (err) {
+    result.err = err;
+    result.stack = err.stack;
+    result.command  = 'error';
+  }
+  if (data) {
+    result.data = data
+  }
+  process.send(result);
+}
+
 var config = {
-  async: false,
+  async: true,
   defs: loadDefs(defs_dir),
   plugins: loadPlugins(plugin_dir),
-  getFile: fs.readFileSync,
+  getFile: function(x, cb) {
+    fs.readFile(x, {encoding: 'utf8'}, cb)
+  },
 };
 
 var server = new tern.Server(config);
+var currentmsg;
 
 process.on('message', function(msg) {
   clearTimeout(shutdown);
   shutdown = setTimeout(doShutdown, maxIdleTime);
+  currentmsg = msg;
   switch(msg.command) {
     case 'request':
       server.request(msg.data, function(e, out) {
-        msg.data = out;
-        process.send(msg);
+        send(e, out, msg);
       });
       break;
     case 'addfiles':
       msg.data.forEach(function(x) {
-        server.addFile(x);
+          server.addFile(x);
       });
-      msg.data = 'success';
-      process.send(msg);
     break;
   }
 });
 
 process.on("SIGINT", function() { process.exit(); });
 process.on("SIGTERM", function() { process.exit(); });
+process.on('uncaughtException', function (err) {
+  send(err, {}, currentmsg);
+});

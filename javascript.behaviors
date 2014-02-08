@@ -7,7 +7,9 @@
                          (:lt.object/add-tag :watchable)
                          :lt.plugins.js.tern/finish-update-hints
                          :lt.plugins.js.tern/trigger-update-hints
-                         :lt.plugins.js.tern/use-tern-hints]
+                         :lt.plugins.js.tern/use-tern-hints
+                         :lt.plugins.js.tern/clear-token]
+     :hinter [:lt.plugins.js.tern/clear-token]
      :tern.client [:lt.objs.clients/handle-message
                    :lt.objs.clients/on-connect-drain
                    :lt.objs.clients/try-send

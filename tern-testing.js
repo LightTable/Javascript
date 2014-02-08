@@ -1,5 +1,8 @@
 var child = require('child_process').fork('ternserver.js');
 
+var files = ["/home/eric/.config/LightTable/plugins/Javascript/tern-testing.js",
+             "/home/eric/.config/LightTable/plugins/Javascript/node/ternserver.js"]
+
 function sendRequest(proc) {
   var data = {
     type: 'request',
@@ -21,6 +24,7 @@ function sendRequest(proc) {
   proc.send(data);
 }
 
+require('fs').rea
 var result;
 function listen(proc) {
   proc.on('message', function(data) {
@@ -30,4 +34,4 @@ function listen(proc) {
 }
 
 listen(child);
-sendRequest(child);
+child.send({command: 'addfiles', data: files })

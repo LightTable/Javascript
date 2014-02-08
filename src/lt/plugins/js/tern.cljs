@@ -57,9 +57,8 @@
                       (let [worker (::worker @this)
                             err (fn [e]
                                   (object/raise this :error! e))
-                            ext (fn [code signal]
-                                  (object/raise this :disconnect code signal))
-                            dis (fn []
+                            dis (fn [code signal]
+                                  (println (str "Code: " code " Singnal: " signal))
                                   (object/raise this :disconnect))
                             msg (fn [m]
                                   (object/raise this :message [(symbol (.-cb m))
@@ -67,8 +66,9 @@
                                                                (.-data m)]))]
                         (.on worker "message" msg)
                         (.on worker "disconnect" dis)
-                        (.on worker "exit" ext)
+                        (.on worker "exit" dis)
                         (.on worker "error" err))))
+
 
 (behavior ::error
           :triggers #{:error}
@@ -79,8 +79,8 @@
 (behavior ::kill
           :triggers #{:kill}
           :reactions (fn [this]
-                       (clients/rem! this) ;; triggers :disconnect
-                       (.kill (::worker @this))))
+                       (.kill (::worker @this))
+                       (object/raise this :disconnect)))
 
 (behavior ::disconnect
           :triggers #{:disconnect}
@@ -92,6 +92,7 @@
 
 (behavior ::init
           :triggers #{:try-send!}
+          :order -7
           :reaction (fn [this _]
                       (when-not (:connected @this)
                         (let [cp (js/require "child_process")
@@ -110,7 +111,7 @@
 (behavior ::add-files ;; need to convert over add-files function
           :triggers #{:add-files}
           :reaction (fn [this paths]
-                      (clients/send this :addfiles paths :only this)))
+                      (clients/send this :addfiles paths)))
 
 
 (object/object* ::tern.client
@@ -120,16 +121,6 @@
 
 (def tern-client (object/create ::tern.client))
 
-
-;; (clients/send tern-client :request
-;;                 {:query {:type "completions"
-;;                               :file "blergs.js"
-;;                               :end {:ch 2 :line 1}}
-;;                       :files [{:type "full"
-;;                                :text "\r\nco\r\n"
-;;                                :name "blergs.js"}]}
-;;               :only (fn [cmd data]
-;;                       (.log js/console data)))
 ;; Autocomplete
 
 (behavior ::trigger-update-hints
@@ -157,74 +148,17 @@
                         (object/merge! editor {::token token})
                         (object/raise editor :editor.javascript.hints.update!))
                       (if-let [js-hints (::hints @editor)]
-                        (concat js-hints hints)
+                        js-hints
                         hints)))
 
-(comment
-  ;; Position
-  (-> (pool/last-active)
-      (ed/->cursor))
+(behavior ::clear-token
+          :triggers #{:select :select-unknown :escape!}
+          :reaction (fn []
+                      (cmd/exec! ::clear-token)))
 
-  ;; Text value
-  (-> (pool/last-active)
-      (ed/->val))
-
-  ;; Path
-  (-> (pool/last-active)
-      deref
-      :info
-      :path))
-
-;; Playground
-(comment
-  (behavior ::js-hints
-            :triggers #{:hints+}
-            :reaction (fn [editor hints token]
-                        (do
-                          (identity token)
-                          (concat hints [#js {:completion "blergs123"}]))))
-
-  (def fs (js/require "fs"))
-
-  (def js-re #"\.js$")
-
-  (->> @lt.objs.workspace/current-ws
-       :folders
-       (mapcat #(files/filter-walk (fn [x]
-                                     (re-find js-re x)) %)))
-
-  (def tern (user-module "Javascript" "tern" ))
-
-  (def server (tern.Server. #js {:getFile (fn [path]
-                                            (files/bomless-read path))
-                                 :async false
-                                 :defs #js [(tern-def "browser.json")
-                                            (tern-def "ecma5.json")]
-                                 :plugins #js {}}))
-
-  (def test-file (files/join (:path (user-plugin-info "Javascript" ))
-                             "tern-testing.js" ))
-
-  (def other-file (files/join (:path (user-plugin-info "Javascript" ))
-                              "blah.js" ))
-  (def cp (js/require "child_process"))
-  (def worker (.fork cp ternserver-path #js ["--harmony"] #js {:execPath (files/lt-home (thread/node-exe)) :silent true}))
-
-  (def compl (atom nil))
-
-  (.addFile server other-file)
-
-  (.request server (clj->js {:query {:type "completions"
-                                     :file test-file
-                                     :end {:ch 2
-                                           :line 7}
-                                     :lineCharPositions true
-                                     :docs true
-                                     :types true}
-                             :file [{:name test-file
-                                     :text (files/bomless-read test-file)}]})
-            (fn [e data]
-              (swap! compl (fn [_ d] d) data)))
-
-  @compl)
-
+(cmd/command {:command ::clear-token
+              :hidden true
+              :desc "Editor: Clear last Tern token"
+              :exec (fn []
+                      (object/merge! (pool/last-active) {::token :none
+                                                         ::hints nil}))})
