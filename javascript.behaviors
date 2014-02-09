@@ -7,7 +7,10 @@
                          (:lt.object/add-tag :watchable)
                          :lt.plugins.js.tern/finish-update-hints
                          :lt.plugins.js.tern/trigger-update-hints
-                         :lt.plugins.js.tern/use-tern-hints]
+                         :lt.plugins.js.tern/use-tern-hints
+                         :lt.plugins.doc/editor.doc.show!
+                         :lt.plugins.js.tern/javascript-doc
+                         :lt.plugins.js.tern/print-javascript-doc]
      :hinter [:lt.plugins.js.tern/clear-token]
      :tern.client [:lt.objs.clients/handle-message
                    :lt.objs.clients/on-connect-drain

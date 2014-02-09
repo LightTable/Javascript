@@ -24,14 +24,18 @@
         fs (filter func (:files @ws))]
     (concat fs (mapcat #(files/filter-walk func %) ds))))
 
-(defn ed->req [editor type]
-  (let [path (-> @editor :info :path)]
-    (clj->js {:query {:type (name type)
-                      :file path
-                      :end (ed/->cursor editor)}
-              :files [{:name path
-                      :text (ed/->val editor)
-                      :type "full"}]})))
+(defn ed->req
+  ([editor type]
+   (ed->req editor type {}))
+  ([editor type query-ops]
+   (let [path (-> @editor :info :path)]
+     (clj->js {:query (merge {:type (name type)
+                              :file path
+                              :end (ed/->cursor editor)}
+                             query-ops)
+               :files [{:name path
+                        :text (ed/->val editor)
+                        :type "full"}]}))))
 
 ;;****************************************************
 ;; Client
@@ -127,12 +131,13 @@
 (behavior ::finish-update-hints
           :triggers #{:editor.javascript.hints.result}
           :reaction (fn [editor res]
-                      (->> res
-                           (.-completions)
-                           (map #(do #js {:completion %}))
-                           (hash-map ::hints)
-                           (object/merge! editor))
-                      (object/raise auto-complete/hinter :refresh!)))
+                      (when res
+                        (->> res
+                             (.-completions)
+                             (map #(do #js {:completion %}))
+                             (hash-map ::hints)
+                             (object/merge! editor))
+                        (object/raise auto-complete/hinter :refresh!))))
 
 
 (behavior ::use-tern-hints
@@ -163,3 +168,27 @@
               :desc "Tern: Kill the Tern auto-completion server"
               :exec (fn []
                       (object/raise tern-client :kill))})
+
+;;****************************************************
+;; Docs
+;;****************************************************
+
+(behavior ::javascript-doc
+          :triggers #{:editor.doc}
+          :reaction (fn [editor]
+                      (let [req (ed->req editor :type {:docs true :types true})
+                            loc (ed/->cursor editor)
+                            cb (fn [_ result]
+                                 (let [doc {:doc (.-doc result)
+                                            :args (.-type result)
+                                            :loc loc
+                                            :file (.-origin result)
+                                            :name (.-name result)}]
+                                   (object/raise editor :editor.javascript.doc doc)))]
+                        (clients/send tern-client :request req :only cb))))
+
+(behavior ::print-javascript-doc
+          :triggers #{:editor.javascript.doc}
+          :reaction (fn [editor result]
+                      (when result
+                        (object/raise editor :editor.doc.show! result))))
