@@ -10,12 +10,16 @@
             [lt.objs.editor.pool :as pool]
             [lt.objs.notifos :as notifos]
             [lt.objs.sidebar.command :as cmd]
+            [lt.util.load :as load]
             [lt.util.cljs :refer [js->clj]])
   (:require-macros [lt.macros :refer [behavior defui]]))
 
-;;(def ternserver-path (escape-spaces (files/join plugins/*plugin-dir* "node" "ternserver.js")))
-(def ternserver-path (files/join plugins/user-plugins-dir "Javascript"  "node" "ternserver.js"))
+;;(def plugin-dir plugins/*plugin-dir*)
+(def plugin-dir (files/join plugins/user-plugins-dir "Javascript"))
+(def ternserver-path (files/join plugin-dir "node" "ternserver.js"))
 
+;; Asummes CodeMirror is already defined
+(load/js (files/join plugin-dir "js" "cmtools.js") :sync)
 
 (defn all-js-files [ws]
   (let [reg #"\.js$"
@@ -192,3 +196,29 @@
           :reaction (fn [editor result]
                       (when result
                         (object/raise editor :editor.doc.show! result))))
+
+;;****************************************************
+;; Jump to definition
+;;****************************************************
+
+(behavior ::jump-to-definition
+          :triggers #{:editor.javascript.jump-to-def!}
+          :reaction (fn [editor]
+                      (let [req (ed->req editor :definition)
+                            loc (ed/->cursor editor)
+                            cb (fn [_ data]
+                                 (let []
+                                   (object/raise lt.objs.jump-stack/jump-stack
+                                                 :jump-stack.push!
+                                                 editor
+                                                 (.-file data)
+                                                 )))]
+                        (clients/send tern-client :request req :only cb))))
+
+(-> (pool/containing-path "blergs.js")
+    first
+    deref
+    :doc
+    deref
+    :doc
+    (js/console.log))
