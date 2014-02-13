@@ -11,7 +11,8 @@
                          :lt.plugins.doc/editor.doc.show!
                          :lt.plugins.js.tern/javascript-doc
                          :lt.plugins.js.tern/print-javascript-doc]
-     :hinter [:lt.plugins.js.tern/clear-token]
+     :hinter [:lt.plugins.js.tern/clear-token
+              :lt.plugins.js.tern/line-change]
      :tern.client [:lt.objs.clients/handle-message
                    :lt.objs.clients/on-connect-drain
                    :lt.objs.clients/try-send

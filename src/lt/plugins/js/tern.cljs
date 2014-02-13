@@ -154,10 +154,15 @@
                         js-hints
                         hints)))
 
+(behavior ::line-change
+          :triggers #{:line-change}
+          :reaction (fn [editor line change]
+                      (when (-> (.-text line) last (= "."))
+                        (cmd/exec! ::clear-token))))
 
 (behavior ::clear-token
           :triggers #{:select :select-unknown :escape!}
-          :reaction (fn []
+          :reaction (fn [_]
                       (cmd/exec! ::clear-token)))
 
 
@@ -211,14 +216,8 @@
                                    (object/raise lt.objs.jump-stack/jump-stack
                                                  :jump-stack.push!
                                                  editor
-                                                 (.-file data)
-                                                 )))]
+                                                 (.-file data))))]
                         (clients/send tern-client :request req :only cb))))
 
-(-> (pool/containing-path "blergs.js")
-    first
-    deref
-    :doc
-    deref
-    :doc
-    (js/console.log))
+
+
