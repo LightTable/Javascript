@@ -4,7 +4,28 @@
                          :lt.plugins.js/on-eval.one
                          :lt.plugins.js/watch-src
                          :lt.plugins.js/js-watch
-                         (:lt.object/add-tag :watchable)]
+                         (:lt.object/add-tag :watchable)
+                         :lt.plugins.js.tern/finish-update-hints
+                         :lt.plugins.js.tern/trigger-update-hints
+                         :lt.plugins.js.tern/use-tern-hints
+                         :lt.plugins.doc/editor.doc.show!
+                         :lt.plugins.js.tern/javascript-doc
+                         :lt.plugins.js.tern/print-javascript-doc
+                         :lt.plugins.js.tern/jump-to-definition]
+     :hinter [:lt.plugins.js.tern/clear-token
+              :lt.plugins.js.tern/line-change]
+     :tern.client [:lt.objs.clients/handle-message
+                   :lt.objs.clients/on-connect-drain
+                   :lt.objs.clients/try-send
+                   :lt.objs.clients/queue!
+                   :lt.plugins.js.tern/send
+                   :lt.plugins.js.tern/connect
+                   :lt.plugins.js.tern/kill
+                   :lt.plugins.js.tern/disconnect
+                   :lt.plugins.js.tern/init
+                   :lt.plugins.js.tern/add-files
+                   :lt.plugins.js.tern/import-current-workspace
+                   ]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
                                          {:name "JSON" :exts [:json] :mime "application/json" :tags [:editor.javascript :editor.json]}])]
      :nodejs.client [:lt.plugins.js.node/init-debugger!

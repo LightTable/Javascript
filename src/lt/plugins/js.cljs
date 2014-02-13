@@ -21,8 +21,11 @@
 (def acorn (.-parse (js/require (plugins/local-module "javascript" "acorn"))))
 (def head ($ :head))
 
-(defn inspect [thing depth]
-  (util-inspect thing false (or depth 5)))
+
+(defn inspect
+  ([thing] (inspect thing 5))
+  ([thing depth]
+   (util-inspect thing false depth)))
 
 (defui script [src]
   [:script {:src src :type "text/javascript"}])
