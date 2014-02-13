@@ -18,9 +18,6 @@
 (def plugin-dir (files/join plugins/user-plugins-dir "Javascript"))
 (def ternserver-path (files/join plugin-dir "node" "ternserver.js"))
 
-;; Asummes CodeMirror is already defined
-(load/js (files/join plugin-dir "js" "cmtools.js") :sync)
-
 (defn all-js-files [ws]
   (let [reg #"\.js$"
         func #(re-find reg %)
@@ -99,14 +96,14 @@
                           (object/raise this :import-current-workspace)))))
 
 
-(behavior ::import-current-workspace ;; probably not what we really want to do
+(behavior ::import-current-workspace
           :triggers #{:import-current-workspace}
           :reaction (fn [this]
                       (let [paths (all-js-files lt.objs.workspace/current-ws)]
                         (object/raise this :add-files paths))))
 
 
-(behavior ::add-files ;; need to convert over add-files function
+(behavior ::add-files
           :triggers #{:add-files}
           :reaction (fn [this paths]
                       (clients/send this :addfiles paths)))
@@ -206,18 +203,21 @@
 ;; Jump to definition
 ;;****************************************************
 
-(behavior ::jump-to-definition
-          :triggers #{:editor.javascript.jump-to-def!}
-          :reaction (fn [editor]
-                      (let [req (ed->req editor :definition)
-                            loc (ed/->cursor editor)
-                            cb (fn [_ data]
-                                 (let []
-                                   (object/raise lt.objs.jump-stack/jump-stack
-                                                 :jump-stack.push!
-                                                 editor
-                                                 (.-file data))))]
-                        (clients/send tern-client :request req :only cb))))
+(defn pos-from-index [editor lnum]
+  (.posFromIndex (ed/get-doc editor) lnum))
 
+
+;; Need to open editor with correct file path
+(behavior ::jump-to-definition
+          :triggers #{:editor.jump-to-definition-at-cursor!}
+          :reaction (fn [editor]
+                      (let [req (ed->req editor :definition {:lineCharPositions true})
+                            cb (fn [_ data]
+                                 (object/raise lt.objs.jump-stack/jump-stack
+                                               :jump-stack.push!
+                                               editor
+                                               (.-file data)
+                                               (.-start data)))]
+                        (clients/send tern-client :request req :only cb))))
 
 

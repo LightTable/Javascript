@@ -74,6 +74,7 @@ process.on('message', function(msg) {
       msg.data.forEach(function(x) {
           server.addFile(x);
       });
+      send(null, {}, msg);
     break;
   }
 });

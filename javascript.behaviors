@@ -10,7 +10,8 @@
                          :lt.plugins.js.tern/use-tern-hints
                          :lt.plugins.doc/editor.doc.show!
                          :lt.plugins.js.tern/javascript-doc
-                         :lt.plugins.js.tern/print-javascript-doc]
+                         :lt.plugins.js.tern/print-javascript-doc
+                         :lt.plugins.js.tern/jump-to-definition]
      :hinter [:lt.plugins.js.tern/clear-token
               :lt.plugins.js.tern/line-change]
      :tern.client [:lt.objs.clients/handle-message
