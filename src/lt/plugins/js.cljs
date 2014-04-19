@@ -113,12 +113,12 @@
 (behavior ::watch-custom-src
                   :triggers #{:watch.custom.src+}
                   :reaction (fn [editor cur meta {:keys [exp]} src]
-                              (let [type (-> (parse exp) (.-body) (aget 0) (.-type))])
-                              (if (= "ExpressionStatement" type)
-                                (custom-src->watch src exp meta)
-                                (do
-                                  (notifos/set-msg! "Custom expression is not a syntactic statement" {:class "error"})
-                                  (src->watch meta src)))))
+                              (let [type (-> (parse exp) (.-body) (aget 0) (.-type))]
+                                (if (= "ExpressionStatement" type)
+                                  (custom-src->watch src exp meta)
+                                  (do
+                                    (notifos/set-msg! "Custom expression is not a syntactic statement" {:class "error"})
+                                    (src->watch meta src))))))
 
 
 (behavior ::on-eval
