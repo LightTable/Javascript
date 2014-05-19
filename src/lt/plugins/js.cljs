@@ -84,13 +84,42 @@
         opts-str (.stringify js/JSON opts)]
     (str "lttools.watch(" src ", " opts-str ")" semi)))
 
+(defn fill-placeholders [src exp meta]
+  (-> exp
+      (string/replace "__SELECTION*__", (str "'" src "'"))
+      (string/replace "__SELECTION__" src)
+      (string/replace "__ID__" (:id meta))))
+
+(defn custom-src->watch [src exp meta]
+  (let [hassemi (= (last src) ";")
+        subsrc (if hassemi (butlast src) src)
+        end (if hassemi ";" "")
+        sym (name (gensym "jswatch_temp"))]
+    (str "(function() {"
+           "var " sym " = (" subsrc ");"
+           (src->watch meta (fill-placeholders sym exp meta)) ";"
+           "return " sym ";"
+         "}())" end)))
+
+(defn clean-code [src]
+  (string/replace src (js/RegExp. "\n*#!.*\n" "gm") "\n"))
+
+
 (behavior ::watch-src
                   :triggers #{:watch.src+}
                   :reaction (fn [editor cur meta src]
                              (src->watch meta src)))
 
-(defn clean-code [src]
-  (string/replace src (js/RegExp. "\n*#!.*\n" "gm") "\n"))
+(behavior ::watch-custom-src
+                  :triggers #{:watch.custom.src+}
+                  :reaction (fn [editor cur meta {:keys [exp]} src]
+                              (let [type (-> (parse exp) (.-body) (aget 0) (.-type))]
+                                (if (= "ExpressionStatement" type)
+                                  (custom-src->watch src exp meta)
+                                  (do
+                                    (notifos/set-msg! "Custom expression is not a syntactic statement" {:class "error"})
+                                    (src->watch meta src))))))
+
 
 (behavior ::on-eval
                   :triggers #{:eval}

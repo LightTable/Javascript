@@ -3,6 +3,7 @@
                          :lt.plugins.js/js-exception :lt.plugins.js/on-eval
                          :lt.plugins.js/on-eval.one
                          :lt.plugins.js/watch-src
+                         :lt.plugins.js/watch-custom-src
                          :lt.plugins.js/js-watch
                          (:lt.object/add-tag :watchable)]
      :files [(:lt.objs.files/file-types [{:name "Javascript" :exts [:js] :mime "text/javascript" :tags [:editor.javascript]}
