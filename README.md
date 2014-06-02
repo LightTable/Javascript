@@ -1,4 +1,4 @@
-##Javasript for Light Table
+##Javascript for Light Table
 
 The official Javascript language plugin for Light Table.
 
