@@ -23,14 +23,9 @@
 ;; Proc
 ;;****************************************************
 
-(defn escape-spaces [s]
-  (if (= files/separator "\\")
-    (str "\"" s "\"")
-    s))
-
 (def shell (load/node-module "shelljs"))
 (def harbor ((load/node-module "harbor") 49152 65000))
-(def ltnode-path (escape-spaces (files/join plugins/*plugin-dir* "node/ltnodeclient.js")))
+(def ltnode-path (files/join plugins/*plugin-dir* "node/ltnodeclient.js"))
 
 (defn open-port [id cb]
   (.claim harbor
