@@ -76,6 +76,22 @@
        :end {:line (dec (.-line end))
              :ch (.-column end)}})))
 
+(defn code->forms [text]
+  (let [forms (try
+                (-> text
+                    (parse)
+                    (->body)
+                    (->forms)))
+        lines (vec (string/split-lines text))]
+    (for [f forms
+          :let [loc (:loc f)
+                start (dec (.-start.line loc))
+                end (.-end.line loc)]]
+      {:start {:line (dec start)}
+       :end {:line (dec end)}
+       :type (:type f)
+       :lines (string/join "\n" (subvec lines start end))})))
+
 (defn src->watch [meta src]
   (let [[src semi] (if (= (last src) ";")
                       [(subs src 0 (dec (count src))) ";"]
@@ -124,10 +140,21 @@
 (behavior ::on-eval
                   :triggers #{:eval}
                   :reaction (fn [editor]
-                              (object/raise js-lang :eval! {:origin editor
-                                                             :info (assoc (@editor :info)
-                                                                     :code (-> (watches/watched-range editor nil nil src->watch)
-                                                                               (clean-code)))})))
+                              (let [code (-> (watches/watched-range editor nil nil src->watch)
+                                             (clean-code))
+                                    forms (try
+                                            (code->forms code)
+                                            (catch :default e
+                                              {:ex e
+                                               :meta {:start {:line 0}
+                                                      :end {:line (dec (.-loc.line e))}}}))]
+                                (if (map? forms)
+                                  (object/raise editor :editor.eval.js.exception forms)
+                                  (doseq [f forms]
+                                    (object/raise js-lang :eval! {:origin editor
+                                                                  :info (assoc (@editor :info)
+                                                                          :meta (dissoc f :lines)
+                                                                          :code (:lines f))}))))))
 
 (behavior ::on-eval.one
                   :triggers #{:eval.one}
@@ -191,8 +218,13 @@
                                             (.-stack (:ex ex))
                                             (:ex ex))
                                     loc (-> ex :meta :end)
-                                    loc (assoc loc :start-line (-> ex :meta :start :line))]
-                                (object/raise editor :editor.exception stack loc))
+                                    loc (when loc (assoc loc :start-line (-> ex :meta :start :line)))]
+                                (if loc
+                                  (do
+                                    (when (-> ex :meta :notify)
+                                      (notifos/set-msg! (pr-str (:ex ex)) {:class "error"}))
+                                    (object/raise editor :editor.exception stack loc))
+                                  (notifos/set-msg! (pr-str (:ex ex)) {:class "error"})))
                               ))
 
 (behavior ::js-success
