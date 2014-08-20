@@ -147,13 +147,15 @@
                                             (catch :default e
                                               {:ex e
                                                :meta {:start {:line 0}
+                                                      :notify true
                                                       :end {:line (dec (.-loc.line e))}}}))]
                                 (if (map? forms)
                                   (object/raise editor :editor.eval.js.exception forms)
                                   (doseq [f forms]
                                     (object/raise js-lang :eval! {:origin editor
                                                                   :info (assoc (@editor :info)
-                                                                          :meta (dissoc f :lines)
+                                                                          :meta (-> (dissoc f :lines)
+                                                                                    (assoc :notify true))
                                                                           :code (:lines f))}))))))
 
 (behavior ::on-eval.one
@@ -162,8 +164,6 @@
                               (try
                                 (let [code (clean-code (ed/->val editor))
                                       pos (ed/->cursor editor)
-                                      {:keys [start end] :as meta} (pos->form code pos)
-                                      form (when meta (watches/watched-range editor start end src->watch))
                                       info (:info @editor)
                                       info (if (ed/selection? editor)
                                              (assoc info
@@ -171,8 +171,10 @@
                                                :meta {:start {:line (-> (ed/->cursor editor "start") :line)}
                                                       :end {:line (-> (ed/->cursor editor "end") :line)}
                                                       :type "ExpressionStatement"})
-                                             (when form
-                                               (assoc info :pos pos :code form :meta meta)))
+                                             (let [{:keys [start end] :as meta} (pos->form code pos)
+                                                   form (when meta (watches/watched-range editor start end src->watch))]
+                                               (when form
+                                                 (assoc info :pos pos :code form :meta meta))))
                                       info (update-in info [:code] #(-> %
                                                                         (eval/pad (-> info :meta :start :line))
                                                                         ;(eval/append-source-file (-> @editor :info :path))
@@ -181,7 +183,8 @@
                                     (object/raise js-lang :eval! {:origin editor
                                                                   :info info})))
                                 (catch js/global.Error e
-                                  (object/raise editor :editor.eval.js.exception {:ex e :meta {:end {:line (dec (.-loc.line e))}}})))
+                                  (object/raise editor :editor.eval.js.exception {:ex e :meta {:notify true
+                                                                                               :end {:line (dec (.-loc.line e))}}})))
                              ))
 
 (behavior ::js-result
