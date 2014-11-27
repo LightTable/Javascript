@@ -38,7 +38,7 @@
                               (let [out (.toString data)]
                                   (console/verbatim
                                    (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stdout]"] ": " [:pre (string/trim out)])
-                                   ))))
+                                   nil))))
 
 (behavior ::on-error
                   :triggers #{:proc.error}
