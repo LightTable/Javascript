@@ -117,8 +117,8 @@
            "return " sym ";"
          "}())" end)))
 
-(defn clean-code [src]
-  (string/replace src (js/RegExp. "\n*#!.*\n" "gm") "\n"))
+(defn filter-shebang [src]
+  (string/replace src (js/RegExp. "^#!.*\n") "\n"))
 
 
 (behavior ::watch-src
@@ -141,7 +141,7 @@
                   :triggers #{:eval}
                   :reaction (fn [editor]
                               (let [code (-> (watches/watched-range editor nil nil src->watch)
-                                             (clean-code))
+                                             (filter-shebang))
                                     forms (try
                                             (code->forms code)
                                             (catch :default e
@@ -162,7 +162,7 @@
                   :triggers #{:eval.one}
                   :reaction (fn [editor]
                               (try
-                                (let [code (clean-code (ed/->val editor))
+                                (let [code (filter-shebang (ed/->val editor))
                                       pos (ed/->cursor editor)
                                       info (:info @editor)
                                       info (if (ed/selection? editor)
