@@ -268,6 +268,19 @@
                     :connect (fn []
                                (cmd/exec! :connect-to-browser))})
 
+(cmd/command {:command :connect-to-app
+              :desc "Connect: HTML App (XHR)"
+              :exec (fn []
+                      (popup/popup! {:header "Connect to an HTML App"
+                                     :body [:p "To connect just include the following script tag in the head of your app:"
+                                            [:code "<script id='lt_ws' data-xhr-src='http://localhost:" ws/port "/socket.io/lighttable/ws.js'>var r=new XMLHttpRequest(); r.onreadystatechange=function(){if(r.readyState===4){r.onreadystatechange=null; var s=document.createElement('script'); s.textContent=r.responseText; document.head.appendChild(s); }}; r.open('get',document.getElementById('lt_ws').getAttribute('data-xhr-src'),true); r.send();</script>"]]
+                                     :buttons [{:label "ok"}]}))})
+
+(scl/add-connector {:name "HTML App (XHR)"
+                    :desc "Connect to an HTML app via XHR to eval JavaScript, CSS, and HTML live."
+                    :connect (fn []
+                               (cmd/exec! :connect-to-app))})
+
 (browser/add-util :watch (fn [exp meta]
                            (when-let [obj (object/by-id (.-obj meta))]
                              (object/raise obj (keyword (.-ev meta)) {:result exp :meta (js->clj meta :keywordize-keys true)}))
