@@ -105,13 +105,14 @@ function sbRequire(require, resolve, path) {
   }
 
   var curSb = getSB(path);
-  if(typeof(curSb.module.exports) == "function" || Object.keys(curSb.module.exports).length) {
-    return curSb.module.exports;
+  var exports = curSb.module.exports;
+  if(typeof(exports) == "function" || ((typeof exports === 'object') && (exports !== null) && Object.keys(exports).length)) {
+    return exports;
   }
-  if(typeof(curSb.exports) == "function" || Object.keys(curSb.exports).length) {
+  if(typeof(curSb.exports) == "function" || ((typeof curSb.exports === 'object') && (curSb.exports !== null) && Object.keys(curSb.exports).length)) {
     return curSb.exports;
   }
-  return curSb.module.exports;
+  return exports;
 }
 
 
