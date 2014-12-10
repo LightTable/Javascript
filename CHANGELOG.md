@@ -1,3 +1,9 @@
+## 0.1.2
+
+* Fix require for es6-map
+* Bump CM mode to 4.8.0
+* Convert behaviors to flat format
+
 ## 0.1.1
 * Fix shebang parsing
 
