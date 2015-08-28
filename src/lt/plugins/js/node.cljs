@@ -84,9 +84,6 @@
                         (object/merge! this {:info info})
                         nil))
 
-(defn client-command [client path port]
-  (str "node --debug=" port " " ltnode-path " " path " " tcp/port " " (clients/->id client)))
-
 (defn split-options
   "Split options string into a vector of separate items"
   [options]
