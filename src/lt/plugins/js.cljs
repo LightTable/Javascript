@@ -198,7 +198,7 @@
                                                      (if (:result res)
                                                        (:result res)
                                                        "undefined")
-                                                     (inspect (:result res)))]
+                                                     (inspect (:result res) nil))]
                                     (object/raise editor :editor.result str-result loc {:prefix " = "}))
                                   (object/raise editor :editor.result "✓" loc {:prefix " "})))))
 

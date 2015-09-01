@@ -26,6 +26,7 @@
 (def shell (load/node-module "shelljs"))
 (def harbor ((load/node-module "harbor") 49152 65000))
 (def ltnode-path (files/join plugins/*plugin-dir* "node/ltnodeclient.js"))
+(def node-options nil)
 
 (defn open-port [id cb]
   (.claim harbor
@@ -66,6 +67,16 @@
                               (object/destroy! this)
                               ))
 
+(behavior ::node-start-options
+          :triggers #{:object.instant}
+          :type :user
+          :exclusive true
+          :desc "Node.js: Set `node` start options"
+          :params [{:label "options"
+                    :example "\"--harmony\""}]
+          :reaction (fn [this options]
+                      (set! node-options options)))
+
 (object/object* ::connecting-notifier
                 :triggers []
                 :behaviors [::on-exit ::on-error ::on-out]
@@ -73,8 +84,10 @@
                         (object/merge! this {:info info})
                         nil))
 
-(defn client-command [client path port]
-  (str "node --debug=" port " " ltnode-path " " path " " tcp/port " " (clients/->id client)))
+(defn split-options
+  "Split options string into a vector of separate items"
+  [options]
+  (string/split options #" +"))
 
 (defn run-node [{:keys [path name client] :as info}]
   (open-port (clients/->id client)
@@ -84,7 +97,8 @@
                                         :proc obj})
                  (notifos/working "Connecting..")
                  (proc/exec {:command "node"
-                             :args [(str "--debug=" port) ltnode-path path tcp/port (clients/->id client)]
+                             :args (conj (into [(str "--debug=" port)] (split-options node-options))
+                                         ltnode-path path tcp/port (clients/->id client))
                              :cwd (files/parent path)
                              :env {"NODE_PATH" (files/join (files/parent path) "node_modules")}
                              :obj obj})
@@ -172,7 +186,7 @@
     (.write (:debugger-socket @client) (str "Content-Length: " (count c) "\r\n\r\n" c))))
 
 (defn global-eval [client code]
-  (send client {:command :evaluate :arguments {:expression code :global true}}))
+  (send client {:command :evaluate :arguments {:expression code :global true}} nil))
 
 (defn grab-require [client]
   (global-eval client "global.require = global.process.mainModule.require; global.lttools = global.process.mainModule.exports;"))
