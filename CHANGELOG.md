@@ -1,3 +1,7 @@
+## 0.1.3
+
+* Add Node.js start parameters and corresponding behavior
+
 ## 0.1.2
 
 * Fix require for es6-map
