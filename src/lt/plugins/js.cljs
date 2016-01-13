@@ -30,7 +30,7 @@
   (append head (script s)))
 
 (defn parse [code]
-  (acorn code #js {:locations true, :ecmaVersion 6}))
+  (acorn code #js {:locations true, :ecmaVersion 6 :allowReturnOutsideFunction true}))
 
 (defn ->body [tree]
   (if (> 1 (count (.-body tree)))
