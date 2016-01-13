@@ -1,3 +1,11 @@
+# 0.2.0
+
+* Fix acorn SyntaxError for returns outside fns
+* Fix error message when connecting eval
+* Add harbor dependency to plugin instead of depending on LT
+* Rely on native js->clj instead of LT one
+* Cleanup code indentation
+
 ## 0.1.3
 
 * Add Node.js start parameters and corresponding behavior
