@@ -13,8 +13,7 @@
             [lt.plugins.watches :as watches]
             [lt.util.load :as load]
             [clojure.string :as string]
-            [lt.util.dom :refer [$ append]]
-            [lt.util.cljs :refer [js->clj]])
+            [lt.util.dom :refer [$ append]])
   (:require-macros [lt.macros :refer [behavior defui]]))
 
 (def util-inspect (.-inspect (js/require "util")))
