@@ -45,7 +45,7 @@
           :triggers #{:proc.error}
           :reaction (fn [this data]
                       (let [out (.toString data)]
-                        (when-not (re-seq #"debugger listening on port" out)
+                        (when-not (re-seq #"Debugger listening on port" out)
                           (console/verbatim
                            (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stderr]"] ": " [:pre (string/trim out)])
                            "error"
