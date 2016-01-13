@@ -1,0 +1,16 @@
+{
+  "name": "javascript-lt",
+  "version": "0.1.0",
+  "description": "The official JavaScript language plugin for Light Table.",
+  "dependencies": {
+    "acorn": "^0.9.0",
+    "harbor": "^0.2.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LightTable/Javascript"
+  },
+  "author": "LightTable Team",
+  "license": "MIT"
+}

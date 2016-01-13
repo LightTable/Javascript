@@ -24,7 +24,7 @@
 ;;****************************************************
 
 (def shell (load/node-module "shelljs"))
-(def harbor ((load/node-module "harbor") 49152 65000))
+(def harbor ((js/require (plugins/local-module "javascript" "harbor")) 49152 65000))
 (def ltnode-path (files/join plugins/*plugin-dir* "node/ltnodeclient.js"))
 (def node-options nil)
 
