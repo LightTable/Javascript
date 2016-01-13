@@ -34,38 +34,38 @@
           #(cb %2)))
 
 (behavior ::on-out
-                  :triggers #{:proc.out}
-                  :reaction (fn [this data]
-                              (let [out (.toString data)]
-                                  (console/verbatim
-                                   (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stdout]"] ": " [:pre (string/trim out)])
-                                   nil))))
+          :triggers #{:proc.out}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (console/verbatim
+                         (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stdout]"] ": " [:pre (string/trim out)])
+                         nil))))
 
 (behavior ::on-error
-                  :triggers #{:proc.error}
-                  :reaction (fn [this data]
-                              (let [out (.toString data)]
-                                (when-not (re-seq #"debugger listening on port" out)
-                                  (console/verbatim
-                                   (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stderr]"] ": " [:pre (string/trim out)])
-                                   "error"
-                                  )))))
+          :triggers #{:proc.error}
+          :reaction (fn [this data]
+                      (let [out (.toString data)]
+                        (when-not (re-seq #"debugger listening on port" out)
+                          (console/verbatim
+                           (list [:em.file (or (-> @this :info :client deref :name) "node")] [:em.line "[stderr]"] ": " [:pre (string/trim out)])
+                           "error"
+                           )))))
 
 (behavior ::on-exit
-                  :triggers #{:proc.exit}
-                  :reaction (fn [this data]
-                              (when-not (:disconnecting @this)
-                                (notifos/done-working)
-                                (popup/popup! {:header "The node process exited."
-                                               :body [:span "The node process you were connected to suddenly quit. Check the console for more information." [:pre (:buffer @this)]]
-                                               :buttons [{:label "close"}]})
-                                )
-                              (when-not (-> @this :info :client deref :restarting)
-                                (.release harbor (str (-> @this :info :client clients/->id)))
-                                (clients/rem! (-> @this :info :client)))
-                              (proc/kill-all (:procs @this))
-                              (object/destroy! this)
-                              ))
+          :triggers #{:proc.exit}
+          :reaction (fn [this data]
+                      (when-not (:disconnecting @this)
+                        (notifos/done-working)
+                        (popup/popup! {:header "The node process exited."
+                                       :body [:span "The node process you were connected to suddenly quit. Check the console for more information." [:pre (:buffer @this)]]
+                                       :buttons [{:label "close"}]})
+                        )
+                      (when-not (-> @this :info :client deref :restarting)
+                        (.release harbor (str (-> @this :info :client clients/->id)))
+                        (clients/rem! (-> @this :info :client)))
+                      (proc/kill-all (:procs @this))
+                      (object/destroy! this)
+                      ))
 
 (behavior ::node-start-options
           :triggers #{:object.instant}
@@ -207,77 +207,77 @@
   (global-eval client (str "global.lttools.handle(" (.stringify js/JSON (array (:cb msg) (:command msg) (-> msg :data clj->js))) ")")))
 
 (behavior ::send!
-                  :triggers #{:send!}
-                  :reaction (fn [this msg]
-                              (when (= "client.close" (:command msg))
-                                (object/merge! (:proc @this) {:disconnecting true}))
-                              (handle-message this msg)
-                              (when (= "editor.eval.js" (:command msg))
-                                ;(object/raise this :changelive! (js->clj (last msg) :keywordize-keys true))
-                                )
-                              ))
+          :triggers #{:send!}
+          :reaction (fn [this msg]
+                      (when (= "client.close" (:command msg))
+                        (object/merge! (:proc @this) {:disconnecting true}))
+                      (handle-message this msg)
+                      (when (= "editor.eval.js" (:command msg))
+                        ;(object/raise this :changelive! (js->clj (last msg) :keywordize-keys true))
+                        )
+                      ))
 
 (behavior ::refresh-scripts!
-                  :triggers #{:refresh-scripts!}
-                  :reaction (fn [this cb]
-                              (send this {:command :scripts} (fn [m]
-                                                               (object/raise this :debugger-scripts m)
-                                                               (when cb
-                                                                 (cb))))))
+          :triggers #{:refresh-scripts!}
+          :reaction (fn [this cb]
+                      (send this {:command :scripts} (fn [m]
+                                                       (object/raise this :debugger-scripts m)
+                                                       (when cb
+                                                         (cb))))))
 
 (behavior ::changelive!
-                  :triggers #{:changelive!}
-                  :reaction (fn [this info]
-                              (if-let [id (-> @this :scripts (get (:path info)))]
-                                (let [code (editor/->val (object/by-id (:ed-id info)))]
-                                  (send this {:command :changelive :arguments {:script_id id :new_source (wrap-source code)}}))
-                                (object/raise this :refresh-scripts! (fn []
-                                                                       (when (-> @this :scripts (get (:path info)))
-                                                                         (object/raise this :changelive! info)))))))
+          :triggers #{:changelive!}
+          :reaction (fn [this info]
+                      (if-let [id (-> @this :scripts (get (:path info)))]
+                        (let [code (editor/->val (object/by-id (:ed-id info)))]
+                          (send this {:command :changelive :arguments {:script_id id :new_source (wrap-source code)}}))
+                        (object/raise this :refresh-scripts! (fn []
+                                                               (when (-> @this :scripts (get (:path info)))
+                                                                 (object/raise this :changelive! info)))))))
 
 (behavior ::debugger-changelive
-                  :triggers #{:debugger-changelive}
-                  :reaction (fn [this msg]
-                              ))
+          :triggers #{:debugger-changelive}
+          :reaction (fn [this msg]
+                      ))
 
 (behavior ::debugger-scripts
-                  :triggers #{:debugger-scripts}
-                  :reaction (fn [this msg]
-                              (object/merge! this {:scripts (into {} (map (juxt :name :id) (:body msg)))})
-                              ))
+          :triggers #{:debugger-scripts}
+          :reaction (fn [this msg]
+                      (object/merge! this {:scripts (into {} (map (juxt :name :id) (:body msg)))})
+                      ))
 
 (behavior ::debugger-evaluate
-                  :triggers #{:debugger-evaluate}
-                  :reaction (fn [this msg]
-                              ))
+          :triggers #{:debugger-evaluate}
+          :reaction (fn [this msg]
+                      ))
 
 (behavior ::init-debugger!
-                  :triggers #{:init-debugger!}
-                  :reaction (fn [this]
-                              (init this)
-                              ))
+          :triggers #{:init-debugger!}
+          :reaction (fn [this]
+                      (init this)
+                      ))
 
 (behavior ::connect-success
-                  :triggers #{::connect}
-                  :reaction (fn [this]
-                              (notifos/done-working)
-                              (object/raise this :init-debugger!)))
+          :triggers #{::connect}
+          :reaction (fn [this]
+                      (notifos/done-working)
+                      (object/raise this :init-debugger!)))
 
 (behavior ::connect-retry
-                  :triggers #{::connect-fail}
-                  :reaction (fn [this]
-                              (wait 20 #(object/raise this :started))))
+          :triggers #{::connect-fail}
+          :reaction (fn [this]
+                      (wait 20 #(object/raise this :started))))
 
 (behavior ::start-debugger!
-                  :triggers #{:connect}
-                  :reaction (fn [this]
-                               (object/merge! this {:debugger-socket (connect-to "localhost" (:port @this) this)})))
+          :triggers #{:connect}
+          :reaction (fn [this]
+                      (object/merge! this {:debugger-socket (connect-to "localhost" (:port @this) this)})))
 
 (behavior ::connect!
-                  :triggers #{:connect!}
-                  :reaction (fn [this path]
-                              (try-connect {:info {:path path}})
-                              ))
+          :triggers #{:connect!}
+          :reaction (fn [this path]
+                      (try-connect {:info {:path path}})
+                      ))
 
 (object/object* ::nodejs-lang
                 :tags #{:nodejs.lang})
@@ -291,6 +291,6 @@
 
 
 (behavior ::kill-on-closed
-                  :triggers #{:closed}
-                  :reaction (fn [app]
-                              ))
+          :triggers #{:closed}
+          :reaction (fn [app]
+                      ))

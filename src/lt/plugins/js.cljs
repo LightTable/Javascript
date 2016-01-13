@@ -121,131 +121,131 @@
 
 
 (behavior ::watch-src
-                  :triggers #{:watch.src+}
-                  :reaction (fn [editor cur meta src]
-                             (src->watch meta src)))
+          :triggers #{:watch.src+}
+          :reaction (fn [editor cur meta src]
+                      (src->watch meta src)))
 
 (behavior ::watch-custom-src
-                  :triggers #{:watch.custom.src+}
-                  :reaction (fn [editor cur meta {:keys [exp]} src]
-                              (let [type (-> (parse exp) (.-body) (aget 0) (.-type))]
-                                (if (= "ExpressionStatement" type)
-                                  (custom-src->watch src exp meta)
-                                  (do
-                                    (notifos/set-msg! "Custom expression is not a syntactic statement" {:class "error"})
-                                    (src->watch meta src))))))
+          :triggers #{:watch.custom.src+}
+          :reaction (fn [editor cur meta {:keys [exp]} src]
+                      (let [type (-> (parse exp) (.-body) (aget 0) (.-type))]
+                        (if (= "ExpressionStatement" type)
+                          (custom-src->watch src exp meta)
+                          (do
+                            (notifos/set-msg! "Custom expression is not a syntactic statement" {:class "error"})
+                            (src->watch meta src))))))
 
 
 (behavior ::on-eval
-                  :triggers #{:eval}
-                  :reaction (fn [editor]
-                              (let [code (-> (watches/watched-range editor nil nil src->watch)
-                                             (filter-shebang))
-                                    forms (try
-                                            (code->forms code)
-                                            (catch :default e
-                                              {:ex e
-                                               :meta {:start {:line 0}
-                                                      :notify true
-                                                      :end {:line (dec (.-loc.line e))}}}))]
-                                (if (map? forms)
-                                  (object/raise editor :editor.eval.js.exception forms)
-                                  (doseq [f forms]
-                                    (object/raise js-lang :eval! {:origin editor
-                                                                  :info (assoc (@editor :info)
-                                                                          :meta (-> (dissoc f :lines)
-                                                                                    (assoc :notify true))
-                                                                          :code (:lines f))}))))))
+          :triggers #{:eval}
+          :reaction (fn [editor]
+                      (let [code (-> (watches/watched-range editor nil nil src->watch)
+                                     (filter-shebang))
+                            forms (try
+                                    (code->forms code)
+                                    (catch :default e
+                                      {:ex e
+                                       :meta {:start {:line 0}
+                                              :notify true
+                                              :end {:line (dec (.-loc.line e))}}}))]
+                        (if (map? forms)
+                          (object/raise editor :editor.eval.js.exception forms)
+                          (doseq [f forms]
+                            (object/raise js-lang :eval! {:origin editor
+                                                          :info (assoc (@editor :info)
+                                                                  :meta (-> (dissoc f :lines)
+                                                                            (assoc :notify true))
+                                                                  :code (:lines f))}))))))
 
 (behavior ::on-eval.one
-                  :triggers #{:eval.one}
-                  :reaction (fn [editor]
-                              (try
-                                (let [code (filter-shebang (ed/->val editor))
-                                      pos (ed/->cursor editor)
-                                      info (:info @editor)
-                                      info (if (ed/selection? editor)
-                                             (assoc info
-                                               :code (ed/selection editor)
-                                               :meta {:start {:line (-> (ed/->cursor editor "start") :line)}
-                                                      :end {:line (-> (ed/->cursor editor "end") :line)}
-                                                      :type "ExpressionStatement"})
-                                             (let [{:keys [start end] :as meta} (pos->form code pos)
-                                                   form (when meta (watches/watched-range editor start end src->watch))]
-                                               (when form
-                                                 (assoc info :pos pos :code form :meta meta))))
-                                      info (update-in info [:code] #(-> %
-                                                                        (eval/pad (-> info :meta :start :line))
-                                                                        ;(eval/append-source-file (-> @editor :info :path))
-                                                                        ))]
-                                  (when info
-                                    (object/raise js-lang :eval! {:origin editor
-                                                                  :info info})))
-                                (catch js/global.Error e
-                                  (object/raise editor :editor.eval.js.exception {:ex e :meta {:notify true
-                                                                                               :end {:line (dec (.-loc.line e))}}})))
-                             ))
+          :triggers #{:eval.one}
+          :reaction (fn [editor]
+                      (try
+                        (let [code (filter-shebang (ed/->val editor))
+                              pos (ed/->cursor editor)
+                              info (:info @editor)
+                              info (if (ed/selection? editor)
+                                     (assoc info
+                                       :code (ed/selection editor)
+                                       :meta {:start {:line (-> (ed/->cursor editor "start") :line)}
+                                              :end {:line (-> (ed/->cursor editor "end") :line)}
+                                              :type "ExpressionStatement"})
+                                     (let [{:keys [start end] :as meta} (pos->form code pos)
+                                           form (when meta (watches/watched-range editor start end src->watch))]
+                                       (when form
+                                         (assoc info :pos pos :code form :meta meta))))
+                              info (update-in info [:code] #(-> %
+                                                                (eval/pad (-> info :meta :start :line))
+                                                                ;(eval/append-source-file (-> @editor :info :path))
+                                                                ))]
+                          (when info
+                            (object/raise js-lang :eval! {:origin editor
+                                                          :info info})))
+                        (catch js/global.Error e
+                          (object/raise editor :editor.eval.js.exception {:ex e :meta {:notify true
+                                                                                       :end {:line (dec (.-loc.line e))}}})))
+                      ))
 
 (behavior ::js-result
-                  :triggers #{:editor.eval.js.result}
-                  :reaction (fn [editor res]
-                              (notifos/done-working)
-                              (let [loc (-> res :meta :end)
-                                    loc (assoc loc :start-line (-> res :meta :start :line))]
-                                (if (expression? (:meta res))
-                                  (let [str-result (if (:no-inspect res)
-                                                     (if (:result res)
-                                                       (:result res)
-                                                       "undefined")
-                                                     (inspect (:result res) nil))]
-                                    (object/raise editor :editor.result str-result loc {:prefix " = "}))
-                                  (object/raise editor :editor.result "✓" loc {:prefix " "})))))
+          :triggers #{:editor.eval.js.result}
+          :reaction (fn [editor res]
+                      (notifos/done-working)
+                      (let [loc (-> res :meta :end)
+                            loc (assoc loc :start-line (-> res :meta :start :line))]
+                        (if (expression? (:meta res))
+                          (let [str-result (if (:no-inspect res)
+                                             (if (:result res)
+                                               (:result res)
+                                               "undefined")
+                                             (inspect (:result res) nil))]
+                            (object/raise editor :editor.result str-result loc {:prefix " = "}))
+                          (object/raise editor :editor.result "✓" loc {:prefix " "})))))
 
 (behavior ::js-watch
-                  :triggers #{:editor.eval.js.watch}
-                  :reaction (fn [editor res]
-                              (when-let [watch (get (:watches @editor) (-> res :meta :id))]
-                                (let [str-result (if (-> res :meta :no-inspect)
-                                                   (:result res)
-                                                   (inspect (:result res) 0))]
-                                  (object/raise (:inline-result watch) :update! str-result)
-                                  )
-                                )))
+          :triggers #{:editor.eval.js.watch}
+          :reaction (fn [editor res]
+                      (when-let [watch (get (:watches @editor) (-> res :meta :id))]
+                        (let [str-result (if (-> res :meta :no-inspect)
+                                           (:result res)
+                                           (inspect (:result res) 0))]
+                          (object/raise (:inline-result watch) :update! str-result)
+                          )
+                        )))
 
 (behavior ::js-exception
-                  :triggers #{:editor.eval.js.exception}
-                  :reaction (fn [editor ex]
-                              (notifos/done-working)
-                              (let [stack (if (.-stack (:ex ex))
-                                            (.-stack (:ex ex))
-                                            (:ex ex))
-                                    loc (-> ex :meta :end)
-                                    loc (when loc (assoc loc :start-line (-> ex :meta :start :line)))]
-                                (if loc
-                                  (do
-                                    (when (-> ex :meta :notify)
-                                      (notifos/set-msg! (pr-str (:ex ex)) {:class "error"}))
-                                    (object/raise editor :editor.exception stack loc))
-                                  (notifos/set-msg! (pr-str (:ex ex)) {:class "error"})))
-                              ))
+          :triggers #{:editor.eval.js.exception}
+          :reaction (fn [editor ex]
+                      (notifos/done-working)
+                      (let [stack (if (.-stack (:ex ex))
+                                    (.-stack (:ex ex))
+                                    (:ex ex))
+                            loc (-> ex :meta :end)
+                            loc (when loc (assoc loc :start-line (-> ex :meta :start :line)))]
+                        (if loc
+                          (do
+                            (when (-> ex :meta :notify)
+                              (notifos/set-msg! (pr-str (:ex ex)) {:class "error"}))
+                            (object/raise editor :editor.exception stack loc))
+                          (notifos/set-msg! (pr-str (:ex ex)) {:class "error"})))
+                      ))
 
 (behavior ::js-success
-                  :triggers #{:editor.eval.js.file.success}
-                  :reaction (fn [editor]
-                              (notifos/done-working)
-                              (notifos/set-msg! (str "Eval success: " (-> @editor :info :name)))))
+          :triggers #{:editor.eval.js.file.success}
+          :reaction (fn [editor]
+                      (notifos/done-working)
+                      (notifos/set-msg! (str "Eval success: " (-> @editor :info :name)))))
 
 (behavior ::eval!
-                  :triggers #{:eval!}
-                  :reaction (fn [this event]
-                              (let [{:keys [info origin]} event]
-                                (notifos/working "")
-                                (clients/send (eval/get-client! {:command :editor.eval.js
-                                                                 :origin origin
-                                                                 :info info})
-                                              :editor.eval.js
-                                              (assoc info :ed-id (object/->id origin))
-                                              :only origin))))
+          :triggers #{:eval!}
+          :reaction (fn [this event]
+                      (let [{:keys [info origin]} event]
+                        (notifos/working "")
+                        (clients/send (eval/get-client! {:command :editor.eval.js
+                                                         :origin origin
+                                                         :info info})
+                                      :editor.eval.js
+                                      (assoc info :ed-id (object/->id origin))
+                                      :only origin))))
 
 (object/object* ::js-lang
                 :tags #{}
