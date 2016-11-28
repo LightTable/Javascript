@@ -93,10 +93,12 @@ function sbRequire(require, resolve, path) {
   if(!getSB(path)) {
     if(path.match(/[\\\/]/) && fpath.extname(path) == ".js") {
       var sb = sandboxes[path.toLowerCase()] = context(path);
+      var _cleanCode = cleanCode(fs.readFileSync(path));
+      _cleanCode = ';var exports = module.exports;' + _cleanCode;
       moduleCache[path] = sb.module;
       prevModule = currentModule;
       currentModule = sb.module;
-      vm.runInContext(cleanCode(fs.readFileSync(path)), sb, path);
+      vm.runInContext(_cleanCode, sb, path);
       currentModule = prevModule;
       sb.module.loaded = true;
     } else {
