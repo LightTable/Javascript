@@ -1,6 +1,8 @@
-##JavaScript for Light Table
+## JavaScript for Light Table
 
 The official JavaScript language plugin for Light Table.
+
+> Note: This plugin is in need of a maintainer! If you are able and interested then please contact the Light Table maintainers via  [Gitter](https://gitter.im/LightTable/LightTable).
 
 ### For Committers
 
@@ -13,7 +15,7 @@ The official JavaScript language plugin for Light Table.
 * We rely on acorn for parsing JS. See [its readme](https://github.com/ternjs/acorn#main-parser) for
   several parsing options
 
-###License
+### License
 
 Copyright (C) 2013 Kodowa Inc.
 
