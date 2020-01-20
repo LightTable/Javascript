@@ -4,7 +4,7 @@
   "description": "The official JavaScript language plugin for Light Table.",
   "dependencies": {
     "acorn": "^0.9.0",
-    "harbor": "^0.2.0"
+    "harbor": "^0.3.0"
   },
   "devDependencies": {},
   "repository": {
