@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "The official JavaScript language plugin for Light Table.",
   "dependencies": {
-    "acorn": "^0.9.0",
+    "acorn": "^8.0.5",
     "harbor": "^0.2.0"
   },
   "devDependencies": {},
